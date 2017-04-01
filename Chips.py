@@ -74,7 +74,7 @@ class Register:
         return [self.r[i].bit(input[i],load) for i in range(16)]
 
 class RAM8:
-# Memory of 8 registers, each 16-bit wide.  
+# Memory of 8 registers, each 16-bit wide.   
 # The chip facilitates read and write operations, as follows:
 #     Read:  out(t) = RAM8[address(t)](t)
 #     Write: If load(t-1) then RAM8[address(t-1)](t) = in(t-1)
