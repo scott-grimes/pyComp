@@ -15,7 +15,6 @@ and 16-bit versions and multi-way versions of
 each gate
 """
 
-
 def Nand(a,b):
     #Elementary Gate upon which the entire computer
     #is built!
@@ -69,7 +68,7 @@ def Or16(a,b):
 
 def Mux16(a,b,sel):
     #16 bit Mux16 gate
-    return [Mux(i,j,k) for i,j,k in zip(a,b,sel)]
+    return [Mux(i,j,sel) for i,j in zip(a,b)]
     
 def Or8Way(input):
     #8way input, returns true if any value is true
@@ -80,7 +79,6 @@ def Or8Way(input):
     z5 = Or(z1,z2)
     z6 = Or(z3,z4)
     return Or(z5,z6)
-
 
 def Mux4Way16(a,b,c,d,sel):
     #4-way 16-bit multiplexor.  
@@ -128,3 +126,4 @@ def DMux8Way(input,sel):
     g,h = DMux(w4,sel[0])
     
     return(a,b,c,d,e,f,g,h)
+
