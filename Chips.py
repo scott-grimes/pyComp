@@ -33,7 +33,7 @@ def Add16(a,b):
 
 def Inc16(input):
     #16 bit incrementer
-    #out =input+1 (16-bit addition
+    #out =input+1 (16-bit addition)
     #overflow not detected or handled
     base = [0]*16
     base[15] = 1
@@ -68,11 +68,12 @@ class Register:
     #else out[t+1] = out[t] (no change)
     
     def __init__(self):
-        self.r = [Bit() for i in range(16)]
+        self.bits = [Bit() for i in range(16)]
+        self.value = [0]*16
     
     def register(self,input,load):
-        return [self.r[i].bit(input[i],load) for i in range(16)]
-
+        self.value = [self.bits[i].bit(input[i],load) for i in range(16)]
+        return self.value
 class RAM8:
 # Memory of 8 registers, each 16-bit wide.   
 # The chip facilitates read and write operations, as follows:
@@ -103,18 +104,19 @@ class PC:
     def __init__(self):
         self.reg = Register()
         pass
+    
     def go(self,input,load,inc,reset):
-        torecycle = self.reg.r
+        torecycle = self.reg.value
         recycled = Inc16(torecycle)
         addornot = Mux16(torecycle,recycled,inc)
         loadornot = Mux16(addornot,input,load)
-        parsedIn = Mux16(loadornot,0,reset)
-        out = Register(parsedIn,1)
+        parsedIn = Mux16(loadornot,[0]*16,reset)
+        out = self.reg.register(parsedIn,1)
         return out
 
-input = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+input = [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1]
 pc = PC()
-print(pc.go(input,0,1,0))
+pc.go(input,1,0,0)
 print(pc.go(input,0,1,0))
 print(pc.go(input,0,1,0))
 print(pc.go(input,0,1,0))
