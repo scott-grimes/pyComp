@@ -53,6 +53,46 @@ def Inc16(input):
     base[-1] = 1
     return Add16(input,base)
 
+def ALU(x,y,zx,nx,zy,ny,f,no):
+    #  IN  
+    #    x[16], y[16],  // 16-bit inputs        
+    #    zx, // zero the x input?
+    #    nx, // negate the x input?
+    #    zy, // zero the y input?
+    #    ny, // negate the y input?
+    #    f,  // compute  out = x + y (if f == 1) or out = x & y (if == 0)
+    #    no; // negate the out output?
+
+    #OUT 
+    #    out[16], // 16-bit output
+    #    zr, // 1 if (out == 0), 0 otherwise
+    #    ng; // 1 if (out < 0),  0 otherwise
+    x1 = Mux16(x,[0]*16,zx)
+    notx1 = Not16(x1)
+    x2 = Mux16(x1,notx1,nx)
+    
+    y1 = Mux16(y,[0]*16,zy)
+    noty1 = Not16(y1)
+    y2 = Mux16(y1,noty1,ny)
+    
+    xyadd = Add16(x2,y2)
+    xyand = And16(x2,y2)
+    almostOut = Mux16(xyand,xyad,f)
+    
+    notAlmostOut = Not16(almostOut)
+    out = Mux16(almostOut, notAlmostOut, no)
+    outlow = out[0:8]
+    outhigh = out[8:16]
+    ng = out[15]
+    
+    zr1 = Or8Way(outlow)
+    zr2 = Or8Way(outhigh)
+    zralmost = Or(zr1,zr2)
+    zr = Not(zralmost)
+    
+    return out,zr,ng
+    
+
 class DFF:
     #data flip flop gate
     #out(t) = input(t-1)
@@ -61,7 +101,9 @@ class DFF:
         self.out = 0
         
     def load(self,input):
+        temp = self.out
         self.out = input
+        return temp
         
         
 class Bit:
@@ -75,7 +117,7 @@ class Bit:
     def register(self,input,load):
         self.out = self.flipFlop.out
         toclock = Mux(self.out, input, load)
-        self.flipFlop.load(toclock)
+        self.out = self.flipFlop.load(toclock)
         return self.out
 
 class Register:
@@ -120,7 +162,7 @@ class PC:
     
     def __init__(self):
         self.reg = Register()
-        self.value = self.reg.out[:]
+        self.out = self.reg.out[:]
         pass
     
     def register(self,input,load,inc,reset):
@@ -131,7 +173,9 @@ class PC:
         resetOrNot = Mux16(loadOrNot,[0]*16,reset)
         self.out = self.reg.register(resetOrNot,1)
         return self.out
-        
+
+
+
 memory = [[0,0,0],
 [0,0,1],
 [0,1,1],
