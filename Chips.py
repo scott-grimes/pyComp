@@ -4,6 +4,20 @@ Each chip is composed of Gates built in Gates.py
 """
 from Gates import *
 
+def decToBin(input):
+    ans = []
+    while(input>0):
+        ans.append(input%2)
+        input = input//2
+    while(len(ans)<16):
+        ans.append(0)
+    ans.reverse()
+    return ans
+
+def binToDec(input):
+    return sum(c*(2**i) for i,c in enumerate(input[::-1]))
+    
+    
 def HalfAdder(a,b):
     #computes the sum, least significant bit of a+b,
     #and carry, the most significant bit of a+b
@@ -36,7 +50,7 @@ def Inc16(input):
     #out =input+1 (16-bit addition)
     #overflow not detected or handled
     base = [0]*16
-    base[15] = 1
+    base[-1] = 1
     return Add16(input,base)
 
 class DFF:
@@ -48,7 +62,7 @@ class DFF:
         
     def load(self,input):
         self.out = input
-    
+        
         
 class Bit:
     #1-bit register
@@ -56,11 +70,13 @@ class Bit:
     #else out[t+1] = out[t] (no change)
     def __init__(self):
         self.flipFlop = DFF()
-    def bit(self,input,load):
-        toclock = Mux(self.flipFlop.out, input, load)
-        temp = self.flipFlop.out
+        self.out = self.flipFlop.out
+        
+    def register(self,input,load):
+        self.out = self.flipFlop.out
+        toclock = Mux(self.out, input, load)
         self.flipFlop.load(toclock)
-        return temp
+        return self.out
 
 class Register:
     #16 big register
@@ -69,11 +85,13 @@ class Register:
     
     def __init__(self):
         self.bits = [Bit() for i in range(16)]
-        self.value = [0]*16
+        self.out = [0]*16
     
     def register(self,input,load):
-        self.value = [self.bits[i].bit(input[i],load) for i in range(16)]
-        return self.value
+        for i in range(16):
+            self.out[i] = self.bits[i].register(input[i],load)
+        return self.out
+    
 class RAM8:
 # Memory of 8 registers, each 16-bit wide.   
 # The chip facilitates read and write operations, as follows:
@@ -90,7 +108,6 @@ class RAM8:
     def access(self,input,load,address):
         toMemory = DMux8Way(load,address)
         out = [self.r[i].register(input,toMemory[i]) for i in range(8)]
-        
         return Mux8Way16(*out,address) 
 
 
@@ -103,22 +120,42 @@ class PC:
     
     def __init__(self):
         self.reg = Register()
+        self.value = self.reg.out[:]
         pass
     
-    def go(self,input,load,inc,reset):
-        torecycle = self.reg.value
-        recycled = Inc16(torecycle)
-        addornot = Mux16(torecycle,recycled,inc)
-        loadornot = Mux16(addornot,input,load)
-        parsedIn = Mux16(loadornot,[0]*16,reset)
-        out = self.reg.register(parsedIn,1)
-        return out
-
-input = [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1]
+    def register(self,input,load,inc,reset):
+        self.out = self.reg.out[:]
+        incremented = Inc16(self.out)
+        incOrNot = Mux16(self.out,incremented,inc)
+        loadOrNot = Mux16(incOrNot,input,load)
+        resetOrNot = Mux16(loadOrNot,[0]*16,reset)
+        self.out = self.reg.register(resetOrNot,1)
+        return self.out
+        
+memory = [[0,0,0],
+[0,0,1],
+[0,1,1],
+[1,0,0],
+[1,0,1],
+[1,1,0],
+[1,1,1]]
+a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+b = [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0]
 pc = PC()
-pc.go(input,1,0,0)
-print(pc.go(input,0,1,0))
-print(pc.go(input,0,1,0))
-print(pc.go(input,0,1,0))
-print(pc.go(input,0,1,0))
-print(pc.go(input,0,1,0))
+print(pc.register(b,1,0,0))
+print(pc.register(b,0,1,0))
+print(pc.register(a,0,1,0))
+print(pc.register(b,0,1,0))
+print(pc.register(a,0,1,0))
+
+"""
+r=Register()
+a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+b = [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0]
+r.register(a,1)
+print(r.out)
+r.register(b,1)
+print(r.out)
+r.register(a,1)
+print(r.out)
+"""

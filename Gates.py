@@ -67,7 +67,7 @@ def Or16(a,b):
     return [Or(i,j) for i,j in zip(a,b)]
 
 def Mux16(a,b,sel):
-    #16 bit Mux16 gate
+    #16 bit Mux16 gate. 
     return [Mux(i,j,sel) for i,j in zip(a,b)]
     
 def Or8Way(input):
