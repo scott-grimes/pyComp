@@ -22,6 +22,7 @@ def FullAdder(a,b,c,):
 
 def Add16(a,b):
     #add 16 bit values a,b
+    #overflow not handled
     out = [0]*16
     sum,carry = HalfAdder(a[-1],b[-1])
     out[-1] = sum
@@ -34,7 +35,7 @@ def Add16(a,b):
 def Inc16(input):
     #16 bit incrementer
     #out =input+1 (16-bit addition)
-    #overflow not detected or handled
+    #overflow not handled
     base = [0]*16
     base[-1] = 1
     return Add16(input,base)
@@ -139,6 +140,7 @@ class RAM8:
         return Mux8Way16(*out,address) 
 
 class RAM64:
+    #memory of 64 registers, each 16bits wide
     def __init__(self):
         self.r = [RAM8() for i in range(8)]
     
@@ -147,7 +149,9 @@ class RAM64:
         out = [self.r[i].access(input,toMemory[i],address[0:3]) for i in range(8)]
         return Mux8Way16(*out,address[3:6])
 
-class RAM512():
+class RAM512():   
+    #memory of 512 registers, each 16bits wide
+
     def __init__(self):
         self.r = [RAM64() for i in range(8)]
     
@@ -157,6 +161,8 @@ class RAM512():
         return Mux8Way16(*out,address[6:9])
     
 class RAM4K():
+    #memory of 4096 registers, each 16bits wide
+
     def __init__(self):
         self.r = [RAM512() for i in range(8)]
     
@@ -164,6 +170,22 @@ class RAM4K():
         toMemory = DMux8Way(load,address[9:12])       
         out = [self.r[i].access(input,toMemory[i],address[0:9]) for i in range(8)]
         return Mux8Way16(*out,address[9:12])
+
+class RAM32K():
+    #memory of 32768 registers, each 16 bits wide
+    def __init__(self):
+        self.r = [RAM4K() for i in range(8)]
+    
+    def access(self,input,load,address):
+        toMemory = DMux8Way(load,address[12:15])       
+        out = [self.r[i].access(input,toMemory[i],address[0:12]) for i in range(8)]
+        return Mux8Way16(*out,address[12:15])
+    
+class FASTRAM():
+    #for debugging the rest of the computer, instead of building ram from
+    #chips just use an array
+    pass
+
 
 
 class PC:

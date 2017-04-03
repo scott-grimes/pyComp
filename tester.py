@@ -127,12 +127,32 @@ def testRam512():
             print(address)
 def testRam4K():
     a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    memory = [decToBin(i)[-9::] for i in range(4096)]
+    memory = [decToBin(i)[-12::] for i in range(4096)]
     ram = RAM4K()
     print('loading')
     ram.access(a,1,memory[4095])
+    count = 0
     for address in memory: 
+        if(count%100==0):
+            print(count)
         if(sum(ram.access(a,0,address))>0):
             print(address)
-testRam4K()
-#testRam64()
+        count+=1
+def testRam32K():
+    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    memory = [decToBin(i)[-15::] for i in range(4096*8)]
+    ram = RAM32K()
+    print('loading')
+    ram.access(a,1,memory[3])
+    count = 0
+    for address in memory: 
+        if(count%100==0):
+            print(count)
+        if(sum(ram.access(a,0,address))>0):
+            print(address)
+        count+=1
+
+
+#used to test/debug shit
+
+
