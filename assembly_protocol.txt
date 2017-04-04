@@ -1,0 +1,195 @@
+Assembly Protocol
+
+
+
+Instruction Types:
+The CPU accepts two types of 16-bit instructions. An A-instruction and
+C-instruction. The CPU can operate on three different registers.
+D and A, which are internal registers, and M, which stands for 
+a memory location at M[A].
+
+
+
+CPU Instructions
+_________________________________________________________
+
+A-instruction:
+Sets the A register to a 15-bit value
+0VVV-VVVV-VVVV-VVVV
+
+V: the 15-bit value
+
+_________________________________________________________
+
+C-instruction:
+111A CCCC CCDD DJJJ
+
+A&C: used to determine what computation to perform (Fig 1)
+D:   the destination for the computation           (Fig 2)
+J:   used to jump (ie fetch and execute a command) (Fig 3)
+
+
+_________________________________________________________
+Fig 1 : Commands
+Mnemonic                  Mnemonic
+(A=0)   C1   C2   C3   C4   C5   C6   (A=1)
+0   1    0    1    0    1    0    
+1   1    1    1    1    1    1
+-1  1    1    1    0    1    0
+D   0    0    1    1    0    0
+A   1    1    0    0    0    0    M
+!D  0    0    1    1    0    1
+!A  1    1    0    0    0    1    !M
+-D  0    0    1    1    1    1
+-A  1    1    0    0    1    1    -M
+D+1 0    1    1    1    1    1
+A+1 1    1    0    1    1    1    M+1
+D-1 0    0    1    1    1    0
+A-1 1    1    0    0    1    0    M-1
+D+A 0    0    0    0    1    1    D+M
+D-A 0    1    0    0    1    1    D-M
+A-D 0    0    0    1    1    1    M-D
+D&A 0    0    0    0    0    0    D&M
+D|A 0    1    0    1    0    1    D|M
+
+See ALU specifications for the correlation between
+inputs C1,C2,C3,C4,C5,C6 and zx,nx,zy,ny,f,no
+
+
+_________________________________________________________
+Fig 2: Destinations (where computed value is stored)
+
+D1 D2 D3    Mnemonic    Destination
+0  0  0     null    value not stored
+0  0  1     M       Memory[A] (memory register with address at A)
+0  1  0     D       D register
+0  1  1     MD      Memory[A] and D register
+1  0  0     A       A register
+1  0  1     AM      A register and Memory[A]
+1  1  0     AD      A register and D register
+1  1  1     AMD     A register, Memory[A], and D register
+
+
+_________________________________________________________
+Fig 3: Jump Instructions
+Assuming A is set to the address we to which we would like to jump,
+Jump will jump if it's condition is satisfied, otherwise the program
+will continue to execute as before.
+
+Example Code:
+@3
+D=M   #D=Memory[3]
+@5
+D=D-A #D=D-5
+@100
+D;JEQ #If D=0 goto 100
+@200
+0;JMP #goto 200
+
+J1: if out<0
+J2: if out=0
+J3: if out>0
+
+
+J1 J2 J3  Mnemonic  Instruction
+0  0  0   null      no jump
+0  0  1   JGT       jump if out>0
+0  1  0   JEQ       jump if out=0
+0  1  1   JGE       jump if out>=0
+1  0  0   JLT       jump if out<0
+1  0  1   JNE       jump if out!=0
+1  1  0   JLE       jump if out<=0
+1  1  1   JMP       jump
+
+
+_________________________________________________________
+
+Predefined Assembly Commands:
+
+* The symbols R0 to R15 refer to the RAM addresses at 0 to 15
+* SP, LCL, ARG, THIS, THAT refer to RAM addresses 0 to 4 respectively
+* SCREEN and KBD refer to RAM addresses 16384 (0x4000) and 24576 (0x6000)
+  which are the base addresses for the screen and keyboard map
+* Label symbols are user-defined as "(Xxx)", used to refer to the memory
+  location holding the next command in the program. Each label must be
+  unique in the program, and can be used anywhere in the program, even 
+  before it has been defined
+* Variable symbols are user-defined as "Xxx" so long as it does not
+  interfere with the built-in symbols or any label "(Xxx)". Each variable
+  is assigned a unique memory address by the assembler starting at RAM
+  address 16 (0x0010).
+
+_________________________________________________________
+
+I/O Handling
+
+Screen: The program supports a black-and-white screen with 256 rows of 512 
+pixels. The screen contents are stored in an 8K memory map beginning at 
+RAM address 16384 (0x4000). Each row in the screen starting at the top-left
+is represented by 32 consecutive 16-bit words. Black is 1, white is 0.
+
+To access a pixel at row r from the top and column c from the left, 
+look at the c%16 bit of the word located at Memory[16384+r*32+c/16].
+
+Example Code:
+#draw a single black dot on the screen's top left corner
+@SCREEN
+M=1
+
+Keyboard: The RAM address 24576 (0x6000) stores a single-word map of the 
+keyboard. If no key is pressed, 0 appears in the location. In addition
+to the normal ASCII codes, the following codes are also recognized:
+
+Key     Code
+newline     128
+backspace   129
+left arrow  130
+up arrow    131
+right arrow 132
+down arrow  133
+home        134
+end     135
+page up     136
+page down   137
+insert      138
+delete      139
+esc     140
+f1-f12      141-152
+
+
+_________________________________________________________
+Machine/Binary Code File
+
+A machine/binary code file is a text file with one 
+command per line. Each command is 16 "0" or "1" ASCII 
+characters which represents a single CPU instruction. When a 
+machine language program is loaded into the computer's 
+instruction memory, the binary code on the file's n'th line is
+stored in address n of the instruction memory. The count
+of both program lines and memory addresses start at 0. 
+
+
+
+_________________________________________________________
+
+Assembly Language File
+Constants in our file must be non-negative and written as decimals.
+A user defined symbol can be any sequence of letters and digits, along
+with underscores (_), periods (.), dollar signs ($), and colons(:). Symbols
+cannot begin with a digit.
+
+Comments are preceeded by two slashes "//". All succeeding text is considered 
+a comment and is ignored.
+
+White space is ignored, as are empty lines.
+
+Case conventions: All of the assembly mnemonics are written in upper-case.
+User defined labels and variable names are case sensitive. Convention dictates
+that uppercase is used for labels and lowercase is used for variable names.
+
+
+
+
+
+
+

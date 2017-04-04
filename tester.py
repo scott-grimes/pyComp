@@ -1,6 +1,6 @@
 from Chips import *
 from Gates import *
-
+from Components import *
 def testBit():
     a = 1
     b = 0
@@ -169,3 +169,24 @@ def testALU():
                     print(ng,myng)
         print('I got '+str(badCount)+' incorrect')
 
+def testCPU():
+    
+    cpu = CPU()
+    with open("cpu.tst", "r") as ins: 
+        badCount = 0
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                inM = int(parsed[1])
+                instruction = [i for i in parsed[2]]
+                rest = int(parsed[3])
+                print(parsed)
+                outM = parsed[4]
+                writeM = parsed[5]
+                addre = parsed[6]
+                pc  = parsed[7]
+                DRegister = parsed[8]
+                myoutputs = cpu.instruct(inM,instruction,rest) #
+                print(myoutputs)
+    
+testCPU()

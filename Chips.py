@@ -1,6 +1,9 @@
 """
+
 Contains all of the chips our computer will need.
 Each chip is composed of Gates built in Gates.py
+All gates are based on a single Nand gate
+
 """
 from Gates import *
 

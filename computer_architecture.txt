@@ -1,0 +1,27 @@
+Computer Architecture
+
+Our computer is a 16-bit von Neumann Machine
+
+consists of
+* Two blocks of memory. Instruction Memory and Data Memory, 
+  each memory block is 16-bit and 32k sized. THe instruction memory
+  is read only- loaded from a pre-burnt ROM chip.
+* One CPU containing two registers A,D and an ALU (Arithmetic 
+  Logic Unit. The CPU also has a program counter PC. The D register
+  is used to store data, the A register can be used as a data value, a 
+  RAM address or a ROM address.
+* Input from a keyboard mapped to the memory address 24576 (0x6000)
+* Output to a screen mapped to the base memory address
+  at 16384 (0x4000)
+  * The output of PC is connected to the address input of the ROM
+  chip, so that ROM always emits the instruction ROM[PC]. 
+  
+Our computer operates on an Execute/Fetch cycle. The first instruction
+executes some command, the second instruction is determined by the jump
+bits of the previous instruction. If we need to Jump, PC is set to the value
+of the A register. If not, PC is incremented by 1. This cycle continues
+until the computer is turned off. 
+
+
+
+
