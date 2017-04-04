@@ -70,7 +70,7 @@ def ALU(x,y,zx,nx,zy,ny,f,no):
     out = Mux16(almostOut, notAlmostOut, no)
     outlow = out[0:8]
     outhigh = out[8:16]
-    ng = out[15]
+    ng = out[0]
     
     zr1 = Or8Way(outlow)
     zr2 = Or8Way(outhigh)
@@ -182,11 +182,20 @@ class RAM32K():
         return Mux8Way16(*out,address[12:15])
     
 class FASTRAM():
-    #for debugging the rest of the computer, instead of building ram from
-    #chips just use an array
-    pass
-
-
+    #faster implementation of RAM, instead of building ram from
+    #chips just use an array (speeds up simulation)
+    
+    #memory of n 16-bit registers
+    def __init__(self,n):
+        self.ram = [[0]*16]*n
+        
+     
+        
+    def access(self,input,load,address):
+        address_in_dec = sum(c*(2**i) for i,c in enumerate(address[::-1]))
+        if(load == 1):
+            self.ram[address_in_dec] = input
+        return self.ram[address_in_dec]
 
 class PC:
     #16 bit counter with load and reset controls
@@ -199,6 +208,8 @@ class PC:
         self.reg = Register()
         self.last = self.reg.out[:]
         pass
+    
+   
     
     def register(self,input,load,inc,reset):
         

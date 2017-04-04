@@ -81,24 +81,6 @@ def testPC():
     print(pc.register(a,1,0,1))
     print(pc.register(b,0,1,0))
 
-def testALU():
-    #x,y,zx,nx,zy,ny,f,no):
-    #  IN  
-    #    x[16], y[16],  // 16-bit inputs        
-    #    zx, // zero the x input?
-    #    nx, // negate the x input?
-    #    zy, // zero the y input?
-    #    ny, // negate the y input?
-    #    f,  // compute  out = x + y (if f == 1) or out = x & y (if == 0)
-    #    no; // negate the out output?
-    #
-    #OUT = answer
-    #    zr, // 1 if (out == 0), 0 otherwise
-    #    ng; // 1 if (out < 0),  0 otherwise
-    x = decToBin(4)
-    y = decToBin(4)
-    args = [0,1,0,0,1,0] #0+y = 4
-    print(ALU(x,y,*args))
 
 
 def testRam64():
@@ -153,6 +135,37 @@ def testRam32K():
         count+=1
 
 
-#used to test/debug shit
-
+def testALU():
+    with open("alu.tst", "r") as ins: 
+        badCount = 0
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.split(',')
+                x = parsed[0]
+                y = parsed[1]
+                zx = int(parsed[2])
+                nx = int(parsed[3]) 
+                zy  = int(parsed[4])
+                ny  = int(parsed[5])
+                f  = int(parsed[6])
+                no = int(parsed[7])
+                out = parsed[8]
+                out = [int(i) for i in out]
+                zr = int(parsed[9])
+                ng =  int(parsed[10][0])
+                x = [int(i) for i in x]
+                y = [int(i) for i in y]
+                
+                myout,myzr,myng = ALU(x,y,zx,nx,zy,ny,f,no)
+                if(myout != out or
+                   ng != myng or
+                   zr != myzr):
+                    badCount+=1
+                    print('my out: ',end='')
+                    print(out)
+                    print('act ot: ',end='')
+                    print(myout)
+                    print(zr,myzr)
+                    print(ng,myng)
+        print('I got '+str(badCount)+' incorrect')
 
