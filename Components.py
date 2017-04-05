@@ -6,6 +6,8 @@ class Screen():
     pass
 
 class Keyboard():
+    #returns the ASCII value of whatever key is currently pressed
+    #also returns the special values
     pass
 
 
@@ -15,6 +17,8 @@ class CPU:
         self.PC = PC()
         self.DRegister = Register()
         self.internalOutM = [0]*16
+        self.isZero = 0
+        self.isNeg = 0
     def instruct(self,inM,instruction,reset):
         """
         IN  inM[16],         // M value input  (M = contents of RAM[A])
@@ -32,6 +36,8 @@ class CPU:
         #if "instruction" is a command set A to old outM, else set A to instruction
         #Mux1
         internalOutM = self.internalOutM[:]
+        isZero = self.isZero
+        isNegative = self.isNeg
         muxed1 = Mux16(instruction, internalOutM, instruction[0])
     
         #A Register
@@ -40,8 +46,8 @@ class CPU:
         functionAndAWrite = And(instruction[0], instruction[10])#was instruction 5
         isConstant = Not(instruction[0])
         loadA = Or(functionAndAWrite, isConstant)
-        aout = self.ARegister(muxed1, loadA)
-        A = aout[0]
+        aout = self.ARegister.register(muxed1, loadA)
+        A = aout[:]
         addressM = aout[1::]
     
         #Mux AorM if we instruction is a function and if "a" ==1, use a
@@ -63,12 +69,12 @@ class CPU:
         jump = And(instruction[0], hasJump) #was 15
         noJump = Not(jump)
     
-        pcout = self.PC(A, reset, noJump, jump)
+        pcout = self.PC.register(A, reset, noJump, jump)
         pc = pcout[1::] #was 0..14
     
         #D Register
         loadD = And(instruction[11],instruction[0]) #was 4,15
-        D = self.DRegister(internalOutM, loadD)
+        D = self.DRegister.register(internalOutM, loadD)
      
         #ALU
         outM,zr,ng = ALU(D,AorM,instruction[4],
@@ -82,6 +88,8 @@ class CPU:
         #if write to m ==1 and if instruction is a command writem=1
         writeM = And(instruction[12],instruction[0])
         self.internalOutM = internalOutM[:]
+        self.isZero = zr
+        self.isNeg = ng
         
         return outM, writeM,addressM,pc
 
@@ -89,5 +97,10 @@ class Memory():
     #in in[16], load, address[15]
     #out out[16]
     def __init__(self,debug = True):
-        print('i')
+        if(debug):
+            self.ram = FASTRAM(24576)
+        else:
+            pass
+    def access(self,input,load,address):
+        return self.ram.access(input,load,address)
 

@@ -82,7 +82,6 @@ def ALU(x,y,zx,nx,zy,ny,f,no):
     
     return out,zr,ng
     
-
 class DFF:
     #data flip flop gate
     #out(t) = input(t-1)
@@ -94,8 +93,7 @@ class DFF:
         temp = self.out
         self.out = input
         return temp
-        
-        
+               
 class Bit:
     #1-bit register
     #if load[t] == 1 then out[t+1]= in[t]
@@ -223,6 +221,4 @@ class PC:
         self.last = loadOrNot
         self.out = self.reg.register(resetOrNot,1)
         return self.out
-
-
 

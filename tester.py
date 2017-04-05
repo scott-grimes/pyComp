@@ -1,139 +1,48 @@
 from Chips import *
 from Gates import *
 from Components import *
-def testBit():
-    a = 1
-    b = 0
-    print('creating bit')
-    bit = Bit()
-    print('bit currently reads: ', end='')
-    print(bit.out)
+from scipy.stats.morestats import ansari
+
+def generalTester(desired_outputs,my_outputs):
+    badcount = 0
+    for i,j in zip(desired_outputs,my_outputs):
+        for a,b in zip(i,j):
+            if(a!=b):
+                badcount+=1
+                print(i,j)
+                
+    print('I had '+str(badcount)+' incorrect answers')
     
-    print('loading a 1')
-    bit.register(a,1)
-    print('bit now reads',end='')
-    print(bit.out)
-    
-    print('loading a 0')
-    bit.register(b,1)
-    print('bit now reads',end='')
-    print(bit.out)
-    
-def testRegister():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    b = [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0]
-    print('creating register')
-    r=Register()
-    print('register currently reads: ', end='')
-    print(r.out)
-    
-    print('loading a')
-    r.register(a,1)
-    print('register currently reads: ', end='')
-    print(r.out)
-    
-    print('loading b')
-    r.register(b,1)
-    print('register currently reads: ', end='')
-    print(r.out)
-    
-    print('not loading a')
-    r.register(a,0)
-    print('register currently reads: ', end='')
-    print(r.out)
 
 def decToBin(input):
     ans = []
+    myInput = input
+    if(input<0):
+        input = -input
     while(input>0):
         ans.append(input%2)
         input = input//2
     while(len(ans)<16):
         ans.append(0)
     ans.reverse()
+    #2's complement for neg values
+    if(myInput<0):
+        ans = Not16(ans)
+        ans = Inc16(ans)
     return ans
 
 def binToDec(input):
-    return sum(c*(2**i) for i,c in enumerate(input[::-1]))
+    makeNeg = False
+    if(input[0]==1):
+        makeNeg = True
+        #2's complement for neg values
+        input = Not16(input)
+        input = Inc16(input)
+    ans = sum(c*(2**i) for i,c in enumerate(input[::-1]))
+    if(makeNeg):
+        return -ans
+    return ans
     
-def testRam():
-    
-    memory = [decToBin(i)[-3::] for i in range(8)]
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    
-    ram = RAM8()
-    for address in memory: 
-        print(ram.access(a,0,address))
-    print('loading')
-    ram.access(a,1,memory[2])
-    for address in memory: 
-        print(ram.access(a,0,address))
-
-def testPC():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    b = [0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0]
-    pc = PC()
-    print(pc.register(b,1,0,0))
-    print(pc.register(b,0,1,0))
-    print(pc.register(b,0,1,0))
-    print(pc.register(b,0,1,0))
-    print(pc.register(b,0,1,0))
-    print(pc.register(a,1,0,0))
-    print(pc.register(a,1,0,1))
-    print(pc.register(b,0,1,0))
-
-
-
-def testRam64():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    memory = [decToBin(i)[-6::] for i in range(64)]
-    ram = RAM64()
-    for address in memory: 
-        print(address)
-        print(sum(ram.access(a,0,address)))
-    print('loading')
-    ram.access(a,1,memory[2])
-    for address in memory: 
-        if(sum(ram.access(a,0,address))>0):
-            print(address)
-def testRam512():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    memory = [decToBin(i)[-9::] for i in range(512)]
-    ram = RAM512()
-    for address in memory: 
-        if(sum(ram.access(a,0,address)) != 0):
-            print(address)
-    print('loading')
-    ram.access(a,1,memory[2])
-    for address in memory: 
-        if(sum(ram.access(a,0,address))>0):
-            print(address)
-def testRam4K():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    memory = [decToBin(i)[-12::] for i in range(4096)]
-    ram = RAM4K()
-    print('loading')
-    ram.access(a,1,memory[4095])
-    count = 0
-    for address in memory: 
-        if(count%100==0):
-            print(count)
-        if(sum(ram.access(a,0,address))>0):
-            print(address)
-        count+=1
-def testRam32K():
-    a = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    memory = [decToBin(i)[-15::] for i in range(4096*8)]
-    ram = RAM32K()
-    print('loading')
-    ram.access(a,1,memory[3])
-    count = 0
-    for address in memory: 
-        if(count%100==0):
-            print(count)
-        if(sum(ram.access(a,0,address))>0):
-            print(address)
-        count+=1
-
 
 def testALU():
     with open("alu.tst", "r") as ins: 
@@ -170,7 +79,6 @@ def testALU():
         print('I got '+str(badCount)+' incorrect')
 
 def testCPU():
-    
     cpu = CPU()
     with open("cpu.tst", "r") as ins: 
         badCount = 0
@@ -178,15 +86,89 @@ def testCPU():
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split(',')[:-1]
                 inM = int(parsed[1])
+                inM = decToBin(inM)
                 instruction = [i for i in parsed[2]]
                 rest = int(parsed[3])
-                print(parsed)
+                #print(parsed)
                 outM = parsed[4]
                 writeM = parsed[5]
                 addre = parsed[6]
                 pc  = parsed[7]
                 DRegister = parsed[8]
-                myoutputs = cpu.instruct(inM,instruction,rest) #
-                print(myoutputs)
-    
-testCPU()
+                myoutM, myWriteM,myaddressM,Mypc = cpu.instruct(inM,instruction,rest) #
+                myoutM = binToDec(myoutM)
+                myaddressM = binToDec(myaddressM)
+                Mypc = binToDec(Mypc)
+                correctanswers = [outM,writeM,addre,pc]
+                myanswers = [myoutM,myWriteM,myaddressM,Mypc]
+                for i,j in zip(correctanswers,myanswers):
+                    print('actual/my')
+                    print(i,j)
+                    print()
+                
+def testMemory():
+    mem = Memory()
+    with open("memory.tst", "r") as ins: 
+        badCount = 0
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                
+                input = decToBin(int(parsed[0]))
+                load=int(parsed[1])
+                address=decToBin(int(parsed[2]))
+                out = decToBin(int(parsed[3]))
+                myout = mem.access(input,load,address)
+                if(out != myout):
+                    badCount+=1
+        print('i got'+str(badCount))
+        
+def testRegister():
+    print('testing register')
+    reg = Register()
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/register.tst", "r") as ins: 
+        
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                input = decToBin(int(parsed[1]))
+                load = int(parsed[2])
+                out = decToBin(int(parsed[3]))
+                
+                lineAnswer = [out]
+                desiredAnswers.append(lineAnswer)
+                
+                myout = [reg.register(input,load)[:]]
+                myAnswers.append(myout)
+                
+    generalTester(desiredAnswers,myAnswers)
+
+def testRam8():
+    ram8 = RAM8()
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/ram8.tst", "r") as ins: 
+        
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                input = decToBin(int(parsed[2]))
+                load=int(parsed[3])
+                address=decToBin(int(parsed[4]))[-4:-1]
+                out=decToBin(int(parsed[5]))
+                
+                lineAnswer = [out]
+                desiredAnswers.append(lineAnswer)
+                myout = [ram8.access(input,load,address)[:]]
+                
+                
+                myAnswers.append(myout)
+    generalTester(myAnswers,desiredAnswers)
+#testRegister()               
+
+def demux8way16():
+    pass
+
+testRam8()
