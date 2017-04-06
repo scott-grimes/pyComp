@@ -140,7 +140,6 @@ class RAM8:
         out = [self.r[i].register(input,toMemory[i]) for i in range(8)]
         return Mux8Way16(*out,address)
         
-
 class RAM64:
     #memory of 64 registers, each 16bits wide
     def __init__(self):
@@ -211,8 +210,6 @@ class PC:
         self.reg = Register()
         self.last = self.reg.out[:]
         pass
-    
-   
     
     def register(self,input,load,inc,reset):
         

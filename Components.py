@@ -2,7 +2,6 @@ from Chips import *
 class ROM():
     pass
 
-
 class CPU:
     def __init__(self):
         self.ARegister = Register()
@@ -92,7 +91,9 @@ class Memory():
         if(debug):
             self.ram = FASTRAM(24577)
         else:
+            #implement built in chip memory here
             pass
+        
     def access(self,input,load,address):
         return self.ram.access(input,load,address)
 

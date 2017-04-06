@@ -1,7 +1,6 @@
 from Chips import *
 from Gates import *
 from Components import *
-from scipy.stats.morestats import ansari
 
 def generalTester(desired_outputs,my_outputs):
     badcount = 0
@@ -31,17 +30,20 @@ def decToBin(input):
         ans = Inc16(ans)
     return ans
 
-def binToDec(input):
-    makeNeg = False
-    if(input[0]==1):
-        makeNeg = True
-        #2's complement for neg values
-        input = Not16(input)
-        input = Inc16(input)
-    ans = sum(c*(2**i) for i,c in enumerate(input[::-1]))
-    if(makeNeg):
-        return -ans
-    return ans
+def binToDec(input,IgnoreNeg = False):
+    if(not IgnoreNeg):
+        makeNeg = False
+        if(input[0]==1):
+            makeNeg = True
+            #2's complement for neg values
+            input = Not16(input)
+            input = Inc16(input)
+        ans = sum(c*(2**i) for i,c in enumerate(input[::-1]))
+        if(makeNeg):
+            return -ans
+        return ans
+    else:
+        return sum(c*(2**i) for i,c in enumerate(input[::-1]))
     
 
 def testALU():
@@ -87,20 +89,34 @@ def testCPU():
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                
                 inM = int(parsed[1])
                 inM = decToBin(inM)
-                instruction = [i for i in parsed[2]]
+                
+                instruction = [int(i) for i in parsed[2]]
+                
                 rest = int(parsed[3])
+                
                 outM = parsed[4]
-                writeM = parsed[5]
-                addre = parsed[6]
-                pc  = parsed[7]
-                DRegister = parsed[8]
+                
+                writeM = int(parsed[5])
+                
+                addre = int(parsed[6])
+                
+                pc  = int(parsed[7])
+                
+                DRegister = int(parsed[8])
+                
                 myoutM, myWriteM,myaddressM,Mypc = cpu.instruct(inM,instruction,rest) #
+                
                 myoutM = binToDec(myoutM)
-                myaddressM = binToDec(myaddressM)
-                Mypc = binToDec(Mypc)
-                correctanswers = [outM,writeM,addre,pc]
+                
+                myaddressM = binToDec(myaddressM,True)
+                
+                Mypc = binToDec(Mypc,True)
+                if(outM == '*******'):
+                    outM='0000000'
+                correctanswers = [int(outM),writeM,addre,pc]
                 myanswers = [myoutM,myWriteM,myaddressM,Mypc]
                 desiredAnswers.append(correctanswers)
                 myAnswers.append(myanswers)
@@ -164,7 +180,6 @@ def testRam8():
                 myout = [ram8.access(input,load,address)[:]]
                 myAnswers.append(myout)
     generalTester(myAnswers,desiredAnswers)
-#testRegister()               
 
 def testRam64():
     ram = RAM64()
@@ -185,7 +200,6 @@ def testRam64():
                 myAnswers.append(myout)
     generalTester(myAnswers,desiredAnswers)
 
-
 def testRAM16K():
     ram = RAM16K()
     desiredAnswers = []
@@ -205,8 +219,6 @@ def testRAM16K():
                 myAnswers.append(myout)
     generalTester(myAnswers,desiredAnswers)
 #testRegister()            
-
-
 
 def testDemux8way():
     
@@ -245,5 +257,24 @@ def testmux8way16():
                 
         generalTester(desiredAnswers,myAnswers)
                 
-    #generalTester(myAnswers,desiredAnswers)
-
+def testPC():
+    desiredAnswers = []
+    myAnswers = []
+    pc = PC()
+    with open("testFiles/testPC.tst", "r") as ins: 
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')[2:-1]
+                print(parsed)
+                input = int(parsed[0])
+                reset = int(parsed[1])
+                load = int(parsed[2])
+                inc = int(parsed[3])
+                out = int(parsed[4])
+                myout = pc.register(decToBin(input),load,inc,reset)
+                print(binToDec(myout))
+                print()
+                desiredAnswers.append([out])
+                myAnswers.append([binToDec(myout)])
+    generalTester(desiredAnswers,myAnswers)
+testPC()
