@@ -192,8 +192,6 @@ class FASTRAM():
     def __init__(self,n):
         self.ram = [[0]*16]*n
         
-     
-        
     def access(self,input,load,address):
         address_in_dec = sum(c*(2**i) for i,c in enumerate(address[::-1]))
         print(address_in_dec)
