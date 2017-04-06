@@ -2,14 +2,6 @@ from Chips import *
 class ROM():
     pass
 
-class Screen():
-    pass
-
-class Keyboard():
-    #returns the ASCII value of whatever key is currently pressed
-    #also returns the special values
-    pass
-
 
 class CPU:
     def __init__(self):
@@ -98,7 +90,7 @@ class Memory():
     #out out[16]
     def __init__(self,debug = True):
         if(debug):
-            self.ram = FASTRAM(24576)
+            self.ram = FASTRAM(24577)
         else:
             pass
     def access(self,input,load,address):

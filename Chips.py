@@ -138,7 +138,8 @@ class RAM8:
     def access(self,input,load,address):
         toMemory = DMux8Way(load,address)
         out = [self.r[i].register(input,toMemory[i]) for i in range(8)]
-        return Mux8Way16(*out,address) 
+        return Mux8Way16(*out,address)
+        
 
 class RAM64:
     #memory of 64 registers, each 16bits wide
@@ -146,6 +147,7 @@ class RAM64:
         self.r = [RAM8() for i in range(8)]
     
     def access(self,input,load,address):
+        
         toMemory = DMux8Way(load,address[3:6])
         out = [self.r[i].access(input,toMemory[i],address[0:3]) for i in range(8)]
         return Mux8Way16(*out,address[3:6])
@@ -194,6 +196,7 @@ class FASTRAM():
         
     def access(self,input,load,address):
         address_in_dec = sum(c*(2**i) for i,c in enumerate(address[::-1]))
+        print(address_in_dec)
         if(load == 1):
             self.ram[address_in_dec] = input
         return self.ram[address_in_dec]

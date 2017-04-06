@@ -108,16 +108,17 @@ def testCPU():
                 
 def testMemory():
     mem = Memory()
-    with open("memory.tst", "r") as ins: 
+    with open("testFiles/memory.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split(',')[:-1]
-                
+                print(parsed)
                 input = decToBin(int(parsed[0]))
                 load=int(parsed[1])
-                address=decToBin(int(parsed[2]))
+                address=decToBin(int(parsed[2]))[-15:]
                 out = decToBin(int(parsed[3]))
+                print(input,load,address,out)
                 myout = mem.access(input,load,address)
                 if(out != myout):
                     badCount+=1
@@ -156,19 +157,77 @@ def testRam8():
                 parsed = line.strip('\n').replace(' ','').split(',')[:-1]
                 input = decToBin(int(parsed[2]))
                 load=int(parsed[3])
-                address=decToBin(int(parsed[4]))[-4:-1]
+                address=decToBin(int(parsed[4]))[-3:]
                 out=decToBin(int(parsed[5]))
-                
                 lineAnswer = [out]
                 desiredAnswers.append(lineAnswer)
                 myout = [ram8.access(input,load,address)[:]]
-                
-                
                 myAnswers.append(myout)
     generalTester(myAnswers,desiredAnswers)
 #testRegister()               
 
-def demux8way16():
-    pass
+def testRam64():
+    ram = RAM64()
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/testRam64.tst", "r") as ins: 
+        
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')[:-1]
+                input = decToBin(int(parsed[2]))
+                load=int(parsed[3])
+                address=decToBin(int(parsed[4]))[-6:]
+                out=decToBin(int(parsed[5]))
+                lineAnswer = [out]
+                desiredAnswers.append(lineAnswer)
+                myout = [ram.access(input,load,address)[:]]
+                myAnswers.append(myout)
+    generalTester(myAnswers,desiredAnswers)
+#testRegister()               
 
+
+
+def testDemux8way():
+    
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/dmux8way.tst", "r") as ins: 
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')[:-1]
+                input = int(parsed[1])
+                select = parsed[2]
+                select = [int(i) for i in select]
+                answers = [int(i) for i in parsed[3:]]
+                output = [i for i in DMux8Way(input,select[::-1])]
+                desiredAnswers.append(answers)
+                myAnswers.append(output)
+    generalTester(myAnswers,desiredAnswers)
+
+def testmux8way16():
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/mux8way16.tst", "r") as ins: 
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')[:-1]
+                
+                inputs = parsed[1:9]
+                select = parsed[9]
+                actualOut = parsed[10]
+                inputs = [[int(i) for i in j]for j in inputs]
+                select = [int(i) for i in select]
+                actualOut = [int(i) for i in actualOut]
+                myOut = Mux8Way16(*inputs,select[::-1])
+                desiredAnswers.append(actualOut)
+                myAnswers.append(myOut)
+                
+        generalTester(desiredAnswers,myAnswers)
+                
+    #generalTester(myAnswers,desiredAnswers)
+testRegister()
+testDemux8way()
+testmux8way16()
 testRam8()
+testMemory()
