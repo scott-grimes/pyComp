@@ -174,30 +174,31 @@ class RAM4K():
         out = [self.r[i].access(input,toMemory[i],address[0:9]) for i in range(8)]
         return Mux8Way16(*out,address[9:12])
 
-class RAM32K():
-    #memory of 32768 registers, each 16 bits wide
+class RAM16K():
+    #memory of 16384 registers, each 16 bits wide
     def __init__(self):
-        self.r = [RAM4K() for i in range(8)]
+        self.r = [RAM4K() for i in range(4)]
     
     def access(self,input,load,address):
-        toMemory = DMux8Way(load,address[12:15])       
-        out = [self.r[i].access(input,toMemory[i],address[0:12]) for i in range(8)]
-        return Mux8Way16(*out,address[12:15])
+        toMemory = DMux4Way(load,address[12:14])       
+        out = [self.r[i].access(input,toMemory[i],address[0:12]) for i in range(4)]
+        return Mux4Way16(*out,address[12:14])
     
 class FASTRAM():
     #faster implementation of RAM, instead of building ram from
-    #chips just use an array (speeds up simulation)
+    #chips, use pythons built in array (speeds up simulation)
     
     #memory of n 16-bit registers
     def __init__(self,n):
         self.ram = [[0]*16]*n
+        self.oldValue = [0*16]*n
         
     def access(self,input,load,address):
         address_in_dec = sum(c*(2**i) for i,c in enumerate(address[::-1]))
-        print(address_in_dec)
+        self.oldValue = self.ram[address_in_dec][:]
         if(load == 1):
             self.ram[address_in_dec] = input
-        return self.ram[address_in_dec]
+        return self.oldValue
 
 class PC:
     #16 bit counter with load and reset controls

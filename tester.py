@@ -45,7 +45,7 @@ def binToDec(input):
     
 
 def testALU():
-    with open("alu.tst", "r") as ins: 
+    with open("testFiles/alu.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
@@ -80,7 +80,9 @@ def testALU():
 
 def testCPU():
     cpu = CPU()
-    with open("cpu.tst", "r") as ins: 
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/cpu.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
@@ -89,7 +91,6 @@ def testCPU():
                 inM = decToBin(inM)
                 instruction = [i for i in parsed[2]]
                 rest = int(parsed[3])
-                #print(parsed)
                 outM = parsed[4]
                 writeM = parsed[5]
                 addre = parsed[6]
@@ -101,28 +102,27 @@ def testCPU():
                 Mypc = binToDec(Mypc)
                 correctanswers = [outM,writeM,addre,pc]
                 myanswers = [myoutM,myWriteM,myaddressM,Mypc]
-                for i,j in zip(correctanswers,myanswers):
-                    print('actual/my')
-                    print(i,j)
-                    print()
+                desiredAnswers.append(correctanswers)
+                myAnswers.append(myanswers)
+    generalTester(desiredAnswers,myAnswers)
                 
 def testMemory():
-    mem = Memory()
-    with open("testFiles/memory.tst", "r") as ins: 
-        badCount = 0
+    mem = Memory()  
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/memory.tst", "r") as ins:
         for line in ins:
             if line[0] != '#':
-                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
-                print(parsed)
-                input = decToBin(int(parsed[0]))
-                load=int(parsed[1])
-                address=decToBin(int(parsed[2]))[-15:]
-                out = decToBin(int(parsed[3]))
-                print(input,load,address,out)
-                myout = mem.access(input,load,address)
-                if(out != myout):
-                    badCount+=1
-        print('i got'+str(badCount))
+                parsed = line.strip('\n').replace(' ','').split('|')
+                #print(parsed)
+                input = decToBin(int(parsed[1]))
+                load=int(parsed[2])
+                address=decToBin(int(parsed[3]))[-15:]
+                out = decToBin(int(parsed[4]))
+                myout = mem.access(input,load,address)[:]
+                myAnswers.append(myout)
+                desiredAnswers.append(out)
+    generalTester(desiredAnswers,myAnswers)
         
 def testRegister():
     print('testing register')
@@ -184,7 +184,27 @@ def testRam64():
                 myout = [ram.access(input,load,address)[:]]
                 myAnswers.append(myout)
     generalTester(myAnswers,desiredAnswers)
-#testRegister()               
+
+
+def testRAM16K():
+    ram = RAM16K()
+    desiredAnswers = []
+    myAnswers = []
+    with open("testFiles/testRam16k.tst", "r") as ins: 
+        
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')[:-1]
+                input = decToBin(int(parsed[2]))
+                load=int(parsed[3])
+                address=decToBin(int(parsed[4]))[-14:]
+                out=decToBin(int(parsed[5]))
+                lineAnswer = [out]
+                desiredAnswers.append(lineAnswer)
+                myout = [ram.access(input,load,address)[:]]
+                myAnswers.append(myout)
+    generalTester(myAnswers,desiredAnswers)
+#testRegister()            
 
 
 
@@ -226,8 +246,4 @@ def testmux8way16():
         generalTester(desiredAnswers,myAnswers)
                 
     #generalTester(myAnswers,desiredAnswers)
-testRegister()
-testDemux8way()
-testmux8way16()
-testRam8()
-testMemory()
+
