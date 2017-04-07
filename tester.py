@@ -265,16 +265,15 @@ def testPC():
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[2:-1]
-                print(parsed)
+                
                 input = int(parsed[0])
                 reset = int(parsed[1])
                 load = int(parsed[2])
                 inc = int(parsed[3])
                 out = int(parsed[4])
                 myout = pc.register(decToBin(input),load,inc,reset)
-                print(binToDec(myout))
-                print()
+                
                 desiredAnswers.append([out])
                 myAnswers.append([binToDec(myout)])
     generalTester(desiredAnswers,myAnswers)
-testPC()
+testCPU()

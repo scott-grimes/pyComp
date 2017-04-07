@@ -208,16 +208,14 @@ class PC:
     
     def __init__(self):
         self.reg = Register()
-        self.last = self.reg.out[:]
+        self.out = self.reg.out[:]
         pass
     
     def register(self,input,load,inc,reset):
-        
-        incremented = Inc16(self.last)
-        incOrNot = Mux16(self.last,incremented,inc)
+        incremented = Inc16(self.out)
+        incOrNot = Mux16(self.out,incremented,inc)
         loadOrNot = Mux16(incOrNot,input,load)
         resetOrNot = Mux16(loadOrNot,[0]*16,reset)
-        self.last = loadOrNot
-        self.out = self.reg.register(resetOrNot,1)
+        self.out = self.reg.register(resetOrNot,1)[:]
         return self.out
 
