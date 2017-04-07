@@ -1,4 +1,19 @@
 from Chips import *
+def binToDec(input,IgnoreNeg = False):
+    if(not IgnoreNeg):
+        makeNeg = False
+        if(input[0]==1):
+            makeNeg = True
+            #2's complement for neg values
+            input = Not16(input)
+            input = Inc16(input)
+        ans = sum(c*(2**i) for i,c in enumerate(input[::-1]))
+        if(makeNeg):
+            return -ans
+        return ans
+    else:
+        return sum(c*(2**i) for i,c in enumerate(input[::-1]))
+    
 class ROM():
     pass
 
@@ -10,6 +25,8 @@ class CPU:
         self.internalOutM = [0]*16
         self.isZero = 0
         self.isNeg = 0
+        self.execute = False #cycle is Fetch/Execute. The first run is a 
+                             #fetch run
     def instruct(self,inM,instruction,reset):
         """
         IN  inM[16],         // M value input  (M = contents of RAM[A])
@@ -23,12 +40,13 @@ class CPU:
             addressM[15],    // RAM address (of M)
             pc[15];          // ROM address (of next instruction)
         """
-        
-        #if "instruction" is a command set A to old outM, else set A to instruction
-        #Mux1
+        #get last run's values
         internalOutM = self.internalOutM[:]
         isZero = self.isZero
         isNegative = self.isNeg
+        
+        #if "instruction" is a command set A to old outM, else set A to instruction
+        #Mux1
         muxed1 = Mux16(instruction, internalOutM, instruction[0])
     
         #A Register
@@ -39,13 +57,13 @@ class CPU:
         loadA = Or(functionAndAWrite, isConstant)
         aout = self.ARegister.register(muxed1, loadA)
         A = aout[:]
-        addressM = aout[1::]
-    
+        addressM = aout[1:]
+        #print('addressM',binToDec(addressM,True))
         #Mux AorM if we instruction is a function and if "a" ==1, use a
-        useA = And (instruction[0], b=instruction[3]) #was 3
+        useA = And (instruction[0], b=instruction[3]) #was 12
         AorM = Mux16(A, inM, useA)
-    
-    
+        
+        
         #PC
         #incriment if we're not jumping, load if we are jumping
         isNotPos = Or(isZero,isNegative)
@@ -59,29 +77,52 @@ class CPU:
         hasJump = Or(oneOr, jgt)
         jump = And(instruction[0], hasJump) #was 15
         noJump = Not(jump)
-    
-        pcout = self.PC.register(A, reset, noJump, jump)
-        pc = pcout[1::] #was 0..14
+        #input,load,inc,reset
+        pcout = self.PC.register(A, jump, noJump, reset)
+        pc = pcout[1:] #was 0..14
     
         #D Register
         loadD = And(instruction[11],instruction[0]) #was 4,15
         D = self.DRegister.register(internalOutM, loadD)
-     
+        
         #ALU
-        outM,zr,ng = ALU(D,AorM,instruction[4],
+        outM,isZero,isNegative = ALU(D,AorM,instruction[4],
                                 instruction[5], 
                                 instruction[6], 
                                 instruction[7],
                                 instruction[8], 
                                 instruction[9])
-        internalOutM = outM[:]
+        self.internalOutM = outM[:]
+        self.isZero = isZero
+        self.isNeg = isNegative
     
         #if write to m ==1 and if instruction is a command writem=1
         writeM = And(instruction[12],instruction[0])
-        self.internalOutM = internalOutM[:]
-        self.isZero = zr
-        self.isNeg = ng
+        """
+        print()
+        print('internalOutM',binToDec(internalOutM))
+        print('muxed1',binToDec(muxed1))
+        print('functionAndAWrite',functionAndAWrite)
+        print('isConstant',isConstant)
+        print('loadA',loadA)
+        print('A',binToDec(A))
+        print('useA',useA)
+        print('AorM',binToDec(AorM))
+        print('isZero',isZero)
+        print('isNegative',isNegative)
+        print('isNotPos',isNotPos)
+        print('jlt',jlt)
+        print('jeq',jeq)
+        print('jgt',jgt)
+        print('oneOr',oneOr)
+        print('hasJump',hasJump)
+        print('noJump',noJump)
+        print('loadD',loadD)
+        print('D',binToDec(D))
+        print()
+        """
         
+        print('A',binToDec(A),' D',binToDec(D))
         return outM, writeM,addressM,pc
 
 class Memory():
