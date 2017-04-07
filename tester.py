@@ -15,7 +15,7 @@ def testCPU():
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split(',')[:-1]
-                
+                #inM  ,  instruction   ,reset, outM  ,writeM ,addre, pc  ,DRegiste,
                 inM = int(parsed[1])
                 inM = decToBin(inM)
                 
@@ -47,7 +47,8 @@ def testCPU():
                     
                 correctanswers = [outM,writeM,addre,pc,DRegister]
                 myanswers = [myoutM,myWriteM,myaddressM,Mypc,MyD]
-                
+                print(correctanswers,end=' ')
+                print(myanswers)
                 if(not flipFlop):
                     flipFlop = True
                 else:
@@ -62,5 +63,5 @@ def testCPU():
   
                 
 
-
+testRegister()
 testCPU()
