@@ -1,4 +1,4 @@
-import pygame
+import pygame, random
 class SCREEN:
     def __init__(self,display_size):
         self.display_size = display_size
@@ -9,17 +9,14 @@ class SCREEN:
         row_count = self.display_size[1]
         image = pygame.Surface((col_width,
                                 row_count))
+        pygame.draw.rect(image,(255,255,255),(0,0,col_width,row_count))
         
         for index,pixel in enumerate(memory):
             if(pixel==1):
-                color = (0,0,0)
-            else:
-                color = (255,255,255)
-            row = index//col_width
-            col = (index-row)%col_width
-            rect = (col,
-                    row,
-                    1,1)
-            pygame.draw.rect(image,color,rect)
+                row = index//col_width
+                col = (index-row)%col_width
+                rect = (col,
+                        row,
+                        1,1)
+                pygame.draw.rect(image,(0,0,0),rect)
         return image
-    

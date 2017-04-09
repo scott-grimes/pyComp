@@ -1,4 +1,5 @@
 from Chips import *
+from _nsis import out
 def binToDec(input,IgnoreNeg = False):
     if(not IgnoreNeg):
         makeNeg = False
@@ -40,7 +41,7 @@ class CPU:
             pc[15];          // ROM address (of next instruction)
         """
         #fetch the last CPU executions values
-        internalOutM = self.internalOutM[:]
+        internalOutM = [i for i in self.internalOutM]
         isZero = self.isZero
         isNegative = self.isNeg
         
@@ -56,11 +57,11 @@ class CPU:
         loadA = Or(functionAndAWrite, isConstant)
         aout = self.ARegister.register(muxed1, loadA)[:]
         
-        A = aout[:]
-        addressM = aout[1:]
+        A = [i for i in aout]
+        addressM = [i for i in aout][1:]
         #print('addressM',binToDec(addressM,True))
         #Mux AorM if we instruction is a function and if "a" ==1, use a
-        useA = And (instruction[0], b=instruction[3]) #was 12
+        useA = And (instruction[0], instruction[3]) #was 12
         AorM = Mux16(A, inM, useA)
         
         
@@ -79,7 +80,7 @@ class CPU:
         noJump = Not(jump)
                                 #input,load,inc,reset
         pcout = self.PC.register(A, jump, noJump, reset)
-        pc = pcout[1:] #was 0..14
+        pc = [i for i in pcout][1:] #was 0..14
         
         
         
@@ -96,7 +97,7 @@ class CPU:
                                 instruction[7],
                                 instruction[8], 
                                 instruction[9])
-        self.internalOutM = outM[:]
+        self.internalOutM = [i for i in outM]
         self.isZero = isZero
         self.isNeg = isNegative
         

@@ -1,9 +1,6 @@
 from WorkingTests import *
 
 
-    
-
-
 
 def testCPU():
     cpu = CPU()
@@ -47,14 +44,13 @@ def testCPU():
                     
                 correctanswers = [outM,writeM,addre,pc,DRegister]
                 myanswers = [myoutM,myWriteM,myaddressM,Mypc,MyD]
-                print(correctanswers,end=' ')
-                print(myanswers)
+                print(correctanswers,myanswers)
                 if(not flipFlop):
                     flipFlop = True
                 else:
                     flipFlop = False
                     print()
-                    
+                
                     
                 
                 desiredAnswers.append(correctanswers)
@@ -62,6 +58,7 @@ def testCPU():
     generalTester(desiredAnswers,myAnswers)
   
                 
-
+testPC()
 testRegister()
+testBit()
 testCPU()

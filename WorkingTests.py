@@ -239,6 +239,25 @@ def testPC():
                 desiredAnswers.append([out])
                 myAnswers.append([binToDec(myout)])
     generalTester(desiredAnswers,myAnswers)
+    
+def testBit():
+    bit = Bit()
+    desiredAnswers = []
+    myAnswers = []
+    flipFlop = False
+    with open("testFiles/bit.tst", "r") as ins: 
+        badCount = 0
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split('|')
+                input = int(parsed[2]) 
+                load = int(parsed[3])
+                out = int(parsed[4])
+                myout = bit.register(input,load)
+                desiredAnswers.append([out])
+                myAnswers.append([myout])
+
+    generalTester(desiredAnswers,myAnswers)
 """  
 testPC()
 testALU()
@@ -249,4 +268,5 @@ testMemory()
 testmux8way16()
 testDemux8way()
 testRam64()
+testBit()
 """
