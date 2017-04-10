@@ -1,25 +1,39 @@
-#reads in a VM file from stdin, outputs assembly code to stdout
+#reads in a VM file from stdargs[1] (the first argument), outputs assembly code to STDOUT
+#if no VM file is specified, stdin will be used to read in a file, so that code can be piped
 import sys
 
 class Parser:
     
-    def __init__(self):
-        self.lineNumber = 0
-        self.fileName = 'fileName'
-        #gets the line number of each user-defined symbol
-        #and adds it to our symbol/address dictionary
-        
-        for read_line in sys.stdin:
-            #remove newlines
-            line = read_line.strip('\n')
-            
-            #removes comments
-            line = line.split('//')[0]
-            
-            #ignores blank lines 
-            if line != '':
+    def __init__(self,fileName = False):
+        if fileName is False:
+            self.fileName = 'FileReadFromSTDIN'
+            for read_line in sys.stdin:
+                #remove newlines
+                line = read_line.strip('\n')
                 
-                self.buildLine(line)
+                #removes comments
+                line = line.split('//')[0]
+                
+                #ignores blank lines 
+                if line != '':
+                    
+                    self.buildLine(line)
+        else:
+            #a file was specified, open it and write our assembly code
+            self.fileName = fileName
+            with open(self.fileName) as f:
+                for read_line in f:
+                    #remove newlines
+                    line = read_line.strip('\n')
+                    
+                    #removes comments
+                    line = line.split('//')[0]
+                    
+                    #ignores blank lines 
+                    if line != '':
+                        
+                        self.buildLine(line)
+       
                 
                 
                 
@@ -215,4 +229,7 @@ class Parser:
         return
 
 if __name__ == "__main__":
+    if(len(sys.argv)<2):
         Parser()
+    else:
+        Parser(sys.argv[1])

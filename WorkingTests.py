@@ -47,7 +47,7 @@ def binToDec(input,IgnoreNeg = False):
     
 def testALU(): 
     print('testalu')
-    with open("testFiles/alu.tst", "r") as ins: 
+    with open("testFiles/chipFiles/alu.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
@@ -85,7 +85,7 @@ def testMemory():
     mem = Memory()  
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/memory.tst", "r") as ins:
+    with open("testFiles/chipFiles/memory.tst", "r") as ins:
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')
@@ -105,7 +105,7 @@ def testRegister():
     reg = Register()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/register.tst", "r") as ins: 
+    with open("testFiles/chipFiles/register.tst", "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -127,7 +127,7 @@ def testRam8():
     ram8 = RAM8()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/ram8.tst", "r") as ins: 
+    with open("testFiles/chipFiles/ram8.tst", "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -147,7 +147,7 @@ def testRam64():
     ram = RAM64()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/testRam64.tst", "r") as ins: 
+    with open("testFiles/chipFiles/testRam64.tst", "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -167,7 +167,7 @@ def testRAM16K():
     ram = RAM16K()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/testRam16k.tst", "r") as ins: 
+    with open("testFiles/chipFiles/testRam16k.tst", "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -187,7 +187,7 @@ def testDemux8way():
     print('testDmux8way')
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/dmux8way.tst", "r") as ins: 
+    with open("testFiles/chipFiles/dmux8way.tst", "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[:-1]
@@ -203,7 +203,7 @@ def testDemux8way():
 def testmux8way16():
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/mux8way16.tst", "r") as ins: 
+    with open("testFiles/chipFiles/mux8way16.tst", "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[:-1]
@@ -224,7 +224,7 @@ def testPC():
     desiredAnswers = []
     myAnswers = []
     pc = PC()
-    with open("testFiles/testPC.tst", "r") as ins: 
+    with open("testFiles/chipFiles/testPC.tst", "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[2:-1]
@@ -245,7 +245,7 @@ def testBit():
     desiredAnswers = []
     myAnswers = []
     flipFlop = False
-    with open("testFiles/bit.tst", "r") as ins: 
+    with open("testFiles/chipFiles/bit.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
@@ -258,7 +258,7 @@ def testBit():
                 myAnswers.append([myout])
 
     generalTester(desiredAnswers,myAnswers)
-"""  
+"""
 testPC()
 testALU()
 testRegister()

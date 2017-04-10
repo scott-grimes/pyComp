@@ -7,7 +7,7 @@ def testCPU():
     desiredAnswers = []
     myAnswers = []
     flipFlop = False
-    with open("testFiles/cpu.tst", "r") as ins: 
+    with open("testFiles/chipFiles/cpu.tst", "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
