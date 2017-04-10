@@ -82,9 +82,11 @@ class CPU:
                                 instruction[7],
                                 instruction[8], 
                                 instruction[9])
+        
         self.internalOutM = [i for i in outM]
         self.isZero = isZero
         self.isNeg = isNegative
+        
         
         #if write to m == 1 and if instruction is a command writem=1
         writeM = And(instruction[12],instruction[0])
@@ -165,6 +167,7 @@ def testCPU():
                 desiredAnswers.append(correctanswers)
                 myAnswers.append(myanswers)
     generalTester(desiredAnswers,myAnswers)
+    print('of ',len(desiredAnswers))
                 
 testPC()
 testRegister()
