@@ -1,0 +1,79 @@
+BASIC STACK OPERATIONS
+
+Our virtual machine has 8 operations
+
+CMD     Returns (after popping)     Notes
+add     x+y                         integer addition (2s compliment)
+sub     x-y                         integer subtraction (2s compliment)
+neg     -y                          arithmetic negation (2s compliment)
+eq      true if x=y, else false     equality
+gt      true if x>y, else false     greater than
+lt      true if x<y, else false     less than
+and     x And y                     bit-wise
+or      x Or y                      bit-wise
+not     Not y                       bit-wise
+
+where the stack is organized as
+
+SP->_____
+x-> _____
+y-> _____
+rest of stack below
+_______________________________________________________
+MEMORY ACCESSS
+
+Memory is accessed by the two commands push and pop
+
+push segment index (pushes the value of segment[index] onto the stack)
+pop segment index (pop the top of the stack and store it into segement[index])
+
+There are 8 segments which can be accessed:
+
+Segment         
+argument: stores the functions arguments. Allocated dynamically by 
+the VM implemententaiton when the function is entered
+
+local: stores the functions local variables. Allocated dynamically by the
+VM implementation and initalized to 0's when the function is entered
+
+static: stores static variables shared by all functions in the same .vm file.
+Allocated by the VM imp. for each .vm file, shared by all functions in the 
+same .vm file
+
+constant: pseudo-segment that holds all of the constants in the range [0:32767],
+emulated by the VM implementation. all programs can see this segment
+
+this/that: general purpose segements. can be made to correspond to different areas
+in the heap. Any VM function can use these segments to manipulate 
+selected areas on the heap
+
+pointer: a two-entry segement that holds the base addresses of the this and that
+segements. Any VM function can set pointer 0 (or 1) to some address. the effect of doing
+so is to align the "this" or "that" segment to the heap area beginning in that address
+
+temp: fixed 8-entry segment that holds temporary variables for general use. can be used
+by any VM function for any purpose. shared by all the functions in the program.
+
+____________________________________________
+
+ADVANCED COMMANDS
+
+six additional advanced commands are used:
+
+Program Flow Commands
+label symbol   : label declaration
+goto symbol    : jumps to the symbol
+if-goto symbol : conditional jump
+
+Program Calling Commands
+function name nLocals : function declaration, specifies the number of local variables
+the function "name" will need.
+
+call name nArgs : function call, specifies the number of the functions arguments
+
+return : returns back to the calling function
+
+function name is a symbol and nLocals and nArgs are integers
+____________________________________________
+
+
