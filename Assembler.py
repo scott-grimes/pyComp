@@ -1,5 +1,6 @@
-
 class Parser:
+    #reads in an assembly code file line-by-line and 
+    #prints out the corresponding machine code
     
     def buildSymbolsFromLineNumbers(self,fileName):
         with open(fileName) as f:
@@ -22,8 +23,14 @@ class Parser:
     def __init__(self,fileName):
         self.lineNumber = 0
         self.code = Code()
+        
+        #gets the line number of each user-defined symbol
+        #and adds it to our symbol/address dictionary
+        
         self.buildSymbolsFromLineNumbers(fileName)
-        print(self.code.symbolDict)
+        
+        #builds our machine code line-by-line as our
+        #assembly code is read
         with open(fileName) as f:
             for line in f:
                 #remove whitespace and newlines
@@ -38,6 +45,8 @@ class Parser:
                             
                     
     def buildLine(self,line):
+        #builds the 16bit instruction based on the 
+        #assembly command recieved
         c = self.commandType(line)
         if c=='A':
             return '0'+self.symbol(line)
@@ -48,6 +57,7 @@ class Parser:
     
     
     def commandType(self,line):
+        #returns the type of command
         if line[0]=='@':
             return 'A'
         if line[0]=='(':
@@ -55,6 +65,12 @@ class Parser:
         return 'C'
     
     def symbol(self,line):
+        #returns the address of the symbol given in the
+        #assembly command
+        #address can be either numbers:
+        # @3 returns 0000000000000011
+        #or a system variable defined in our dictionary, or a 
+        #user defined variable defined in our dictionary
         address = ''
         if line[1].isdigit():
             binary_number = bin(int(line[1:]))[2:]
@@ -66,12 +82,16 @@ class Parser:
         return address
     
     def dest(self,line):
+        #builds the destination code based on the desired
+        #assembly command
         d = ''
         if '=' in line:
             d = line.split('=')[0]
         return self.code.dest(d)
     
     def comp(self,line):
+        #builds the computation code based on the desired
+        #assembly command
         d = ''
         if '=' in line:
             d = line.split('=')[1]
@@ -80,6 +100,9 @@ class Parser:
         return self.code.comp(d)
         
     def jump(self,line):
+        #builds the jump code based on the desired
+        #assembly command
+        
         jump = ''
         if ';' in line:
             jump = line.split(';')[1]
@@ -88,6 +111,8 @@ class Parser:
 class Code:
     
     def __init__(self):
+        #number of user-defined variables is 0 at the beginning
+        #our symbol dictionary is pre-built with a few standard symbols
         self.numberOfNewVars = 0
         self.symbolDict = {
         "SP": 0,
@@ -116,15 +141,22 @@ class Code:
         }
         
     def makeNewAddress(self,symbol,address):
+        #adds a new symbol and address pair to our symbol dictionary
         self.symbolDict[symbol] = address
         
     def getAddress(self,symbol):
+        #returns the address of the symbol requested
+        
+        #if the symbol is not already in the dict, add it
+        #note: user defined symbols begin at address 16
         if symbol not in self.symbolDict:
             self.makeNewAddress(symbol,16+self.numberOfNewVars)
             self.numberOfNewVars+=1
         return self.symbolDict[symbol]
         
     def dest(self,mnemonic):
+        #sets the destination to be some combination of
+        #A,D and M. See assembly protocol doc for more info
         d=''
         d+='1' if 'A' in mnemonic else '0'
         d+='1' if 'D' in mnemonic else '0'
@@ -132,6 +164,8 @@ class Code:
         return d
     
     def comp(self,mnemonic):
+        #returns the command bits required to perform
+        #the desired mnemonic action
         
         if (mnemonic=="0")     : return "0101010" 
         elif (mnemonic=="1")   : return "0111111" 
@@ -164,6 +198,9 @@ class Code:
         else:                    return "0000000"
         
     def jump(self,mnemonic):
+        #returns the jump bits based on the jump
+        #command requested
+        
         if(mnemonic=="JGT") : return "001"
         if(mnemonic=="JEQ") : return "010"
         if(mnemonic=="JGE") : return "011"
