@@ -1,5 +1,4 @@
 from Chips import *
-from _nsis import out
 def binToDec(input,IgnoreNeg = False):
     if(not IgnoreNeg):
         makeNeg = False
@@ -18,7 +17,7 @@ def binToDec(input,IgnoreNeg = False):
 class ROM():
     pass
 
-class CPU:
+class CPUOLD:
     def __init__(self):
         self.PC = PC()
         self.ARegister = Register()
