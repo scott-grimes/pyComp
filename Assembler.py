@@ -1,47 +1,50 @@
+#reads in an assembler file from stdin, outputs machine code to stdout
+import sys
+
 class Parser:
-    #reads in an assembly code file line-by-line and 
-    #prints out the corresponding machine code
     
-    def buildSymbolsFromLineNumbers(self,fileName):
-        with open(fileName) as f:
-            for line in f:
-                #remove whitespace and newlines
-                line = line.strip('\n').replace(' ','')
-                
-                #removes comments
-                line = line.split('//')[0]
-                
-                #ignores blank lines 
-                if line != '':
-                    if line[0]=='(':
-                        #if line is a label, adds our lineNumber
-                        symbol = line[1:-1]
-                        self.code.makeNewAddress(symbol,self.lineNumber)        
-                    else:
-                        self.lineNumber+=1    
+    def buildSymbolsFromLineNumbers(self):
+        
+        for read_line in sys.stdin:
+            self.lines.append(read_line)
+            #remove whitespace and newlines
+            line = read_line.strip('\n').replace(' ','')
+            
+            #removes comments
+            line = line.split('//')[0]
+            
+            #ignores blank lines 
+            if line != '':
+                if line[0]=='(':
+                    #if line is a label, adds our lineNumber
+                    symbol = line[1:-1]
+                    self.code.makeNewAddress(symbol,self.lineNumber)        
+                else:
+                    self.lineNumber+=1    
                                 
-    def __init__(self,fileName):
+    def __init__(self):
         self.lineNumber = 0
+        self.lines = [] #array of our lines read in from stdin
         self.code = Code()
         
         #gets the line number of each user-defined symbol
         #and adds it to our symbol/address dictionary
         
-        self.buildSymbolsFromLineNumbers(fileName)
+        self.buildSymbolsFromLineNumbers()
         
         #builds our machine code line-by-line as our
         #assembly code is read
-        with open(fileName) as f:
-            for line in f:
-                #remove whitespace and newlines
-                line = line.strip('\n').replace(' ','')
-                
-                #removes comments
-                line = line.split('//')[0]
-                
-                #ignores blank lines 
-                if line != '' and line[0]!='(':
-                    print(self.buildLine(line))
+        
+        for line in self.lines:
+            #remove whitespace and newlines
+            line = line.strip('\n').replace(' ','')
+            
+            #removes comments
+            line = line.split('//')[0]
+            
+            #ignores blank lines 
+            if line != '' and line[0]!='(':
+                print(self.buildLine(line))
                             
                     
     def buildLine(self,line):
@@ -209,10 +212,6 @@ class Code:
         if(mnemonic=="JLE") : return "110"
         if(mnemonic=="JMP") : return "111"
         return "000"
-        
-#Parser('testFiles/assemblerFiles/Max.asm')
-#Parser('testFiles/assemblerFiles/add.asm')
-#Parser('testFiles/assemblerFiles/MaxL.asm')
-#Parser('testFiles/assemblerFiles/Rect.asm')
-#Parser('testFiles/assemblerFiles/RectL.asm')
-Parser('testFiles/assemblerFiles/PongL.asm')
+
+if __name__ == "__main__":
+        Parser()
