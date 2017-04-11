@@ -1,0 +1,1 @@
+This folder contains jack language program files, along with their compiled VM translated files.

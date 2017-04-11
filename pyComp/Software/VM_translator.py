@@ -1,4 +1,4 @@
-#reads in all VM file in a given directory argv[1] (the first argument),
+#reads in all VM files in a given directory (the first argument passed),
 #outputs assembly code to STDOUT
 import sys
 from os import listdir
@@ -397,7 +397,7 @@ class Parser:
             print('M=0')
         
 if __name__ == "__main__":
-    if(len(sys.argv)<1):
+    if(len(sys.argv)<2):
         print('no folder path given!')
     else:
         Parser(sys.argv[1])
