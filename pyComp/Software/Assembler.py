@@ -23,50 +23,48 @@ class Parser:
                 else:
                     self.lineNumber+=1    
                                 
-    def __init__(self,fileName = None):
+    def __init__(self,file_with_path):
         self.lineNumber = 0
         self.lines = [] #array of our lines read in from stdin
         self.code = Code()
+        fileName = file_with_path.split('\\')[-1]
         
-        if(fileName is None):
-            #gets the line number of each user-defined symbol
-            #and adds it to our symbol/address dictionary
+        
+        
+        
+        
+        #gets the line number of each user-defined symbol
+        #and adds it to our symbol/address dictionary
+        with open(file_with_path) as f:
             
-            self.buildSymbolsFromLineNumbers()
-            
-            #builds our machine code line-by-line as our
-            #assembly code is read
-            
-        else:
-            #a file was used instead of reading from stdin
-            #read in the file and store each line into self.lines
-            
-            with open(fileName) as f:
-                for read_line in f:
-                    self.lines.append(read_line)
-                    #remove whitespace and newlines
-                    line = read_line.strip('\n').replace(' ','')
-                    
-                    #removes comments
-                    line = line.split('//')[0]
-                    
-                    #ignores blank lines 
-                    if line != '':
-                        if line[0]=='(':
-                            #if line is a label, adds our lineNumber
-                            symbol = line[1:-1]
-                            self.code.makeNewAddress(symbol,self.lineNumber)        
-                        else:
-                            self.lineNumber+=1    
-        for line in self.lines:
+            for read_line in f:
+                self.lines.append(read_line)
                 #remove whitespace and newlines
-                line = line.strip('\n').replace(' ','')
+                line = read_line.strip('\n').replace(' ','')
                 
                 #removes comments
                 line = line.split('//')[0]
+                
                 #ignores blank lines 
-                if line != '' and line[0]!='(':
-                    print(self.buildLine(line))
+                if line != '':
+                    if line[0]=='(':
+                        #if line is a label, adds our lineNumber
+                        symbol = line[1:-1]
+                        self.code.makeNewAddress(symbol,self.lineNumber)        
+                    else:
+                        self.lineNumber+=1    
+        
+        #builds our machine code line-by-line as our
+        #assembly code is read
+        for line in self.lines:
+            #remove whitespace and newlines
+            line = line.strip('\n').replace(' ','')
+            
+            #removes comments
+            line = line.split('//')[0]
+            #ignores blank lines 
+            if line != '' and line[0]!='(':
+                print(self.buildLine(line))
                             
                     
     def buildLine(self,line):
@@ -236,4 +234,7 @@ class Code:
         return "000"
 
 if __name__ == "__main__":
-        Parser()
+    if(len(sys.argv)<2):
+        print('No assembly file specified!')
+    else:
+        Parser(sys.argv[1])
