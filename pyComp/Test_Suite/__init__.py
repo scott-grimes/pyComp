@@ -1,1 +1,1 @@
-__all__ = ["WorkingTests"]
+__all__ = ["WorkingTests","CompareFiles"]

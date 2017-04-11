@@ -4,7 +4,9 @@ import sys
 
 class Parser:
     
-    def __init__(self,fileName = False):
+    def __init__(self,filePath,fileName = False):
+        
+        self.UniqueLabelID = 0
         if fileName is False:
             self.fileName = 'FileReadFromSTDIN'
             for read_line in sys.stdin:
@@ -21,7 +23,7 @@ class Parser:
         else:
             #a file was specified, open it and write our assembly code
             self.fileName = fileName
-            with open(self.fileName) as f:
+            with open(filePath) as f:
                 for read_line in f:
                     #remove newlines
                     line = read_line.strip('\n')
@@ -93,7 +95,7 @@ class Parser:
             print("A=M")
             print("M=M-D")
         
-        if('("neg' in parsed):
+        if('neg' in parsed):
             print("M=-D")
         
         if('eq' in parsed or 
@@ -104,19 +106,19 @@ class Parser:
             print("M=M-1")
             print("A=M")
             print("D=M-D") #D has the stack subtraction
-            print("@LogicWasTrue"+str(UniqueLabelID))
-            writeLogicTest(parsed)
+            print("@LogicWasTrue"+str(self.UniqueLabelID))
+            self.writeLogicTest(parsed)
             print("@SP")
             print("A=M")
             print("M=0")
-            print("@EndLogic"+str(UniqueLabelID))
-            print("0JMP")
-            print("(LogicWasTrue"+str(UniqueLabelID)+")")
+            print("@EndLogic"+str(self.UniqueLabelID))
+            print("0;JMP")
+            print("(LogicWasTrue"+str(self.UniqueLabelID)+")")
             print("@SP")
             print("A=M")
             print("M=-1")
-            print("(EndLogic"+str(UniqueLabelID)+")")
-            UniqueLabelID+=1
+            print("(EndLogic"+str(self.UniqueLabelID)+")")
+            self.UniqueLabelID+=1
        
         if('and' in parsed):
             print("@SP")
@@ -220,7 +222,7 @@ class Parser:
                 print("M=D")
                 return
             
-            if(arg1 != "temp" or arg1 == "pointer"):
+            if(not (arg1 == "temp" or arg1 == "pointer")):
                 print("A=M")
             for i in range(self.arg2(line)):
                print("A=A+1") #finds the index inside the segment needed
@@ -232,4 +234,4 @@ if __name__ == "__main__":
     if(len(sys.argv)<2):
         Parser()
     else:
-        Parser(sys.argv[1])
+        Parser(sys.argv[1],sys.argv[1])

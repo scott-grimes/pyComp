@@ -1,4 +1,5 @@
 #reads in an assembly file from stdin, and outputs machine code to stdout
+#alternativly, read in an assembly file from a filename, and outputs machine code to stdout
 import sys
 
 class Parser:
@@ -22,29 +23,50 @@ class Parser:
                 else:
                     self.lineNumber+=1    
                                 
-    def __init__(self):
+    def __init__(self,fileName = None):
         self.lineNumber = 0
         self.lines = [] #array of our lines read in from stdin
         self.code = Code()
         
-        #gets the line number of each user-defined symbol
-        #and adds it to our symbol/address dictionary
-        
-        self.buildSymbolsFromLineNumbers()
-        
-        #builds our machine code line-by-line as our
-        #assembly code is read
-        
+        if(fileName is None):
+            #gets the line number of each user-defined symbol
+            #and adds it to our symbol/address dictionary
+            
+            self.buildSymbolsFromLineNumbers()
+            
+            #builds our machine code line-by-line as our
+            #assembly code is read
+            
+        else:
+            #a file was used instead of reading from stdin
+            #read in the file and store each line into self.lines
+            
+            with open(fileName) as f:
+                for read_line in f:
+                    self.lines.append(read_line)
+                    #remove whitespace and newlines
+                    line = read_line.strip('\n').replace(' ','')
+                    
+                    #removes comments
+                    line = line.split('//')[0]
+                    
+                    #ignores blank lines 
+                    if line != '':
+                        if line[0]=='(':
+                            #if line is a label, adds our lineNumber
+                            symbol = line[1:-1]
+                            self.code.makeNewAddress(symbol,self.lineNumber)        
+                        else:
+                            self.lineNumber+=1    
         for line in self.lines:
-            #remove whitespace and newlines
-            line = line.strip('\n').replace(' ','')
-            
-            #removes comments
-            line = line.split('//')[0]
-            
-            #ignores blank lines 
-            if line != '' and line[0]!='(':
-                print(self.buildLine(line))
+                #remove whitespace and newlines
+                line = line.strip('\n').replace(' ','')
+                
+                #removes comments
+                line = line.split('//')[0]
+                #ignores blank lines 
+                if line != '' and line[0]!='(':
+                    print(self.buildLine(line))
                             
                     
     def buildLine(self,line):

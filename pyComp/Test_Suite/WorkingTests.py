@@ -196,7 +196,7 @@ def testDemux8way():
     print('Test Demux8way')
     desiredAnswers = []
     myAnswers = []
-    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/demux8way.tst')
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/dmux8way.tst')
     with open(fn, "r") as ins: 
         for line in ins:
             if line[0] != '#':
@@ -273,15 +273,17 @@ def testBit():
                 myAnswers.append([myout])
 
     generalTester(desiredAnswers,myAnswers)
-"""
-testPC()
-testALU()
-testRegister()
-testMemory()
-testRam8()
-testMemory()
-testmux8way16()
-testDemux8way()
-testRam64()
-testBit()
-"""
+
+def testAll():
+    
+    testPC()
+    testALU()
+    testRegister()
+    testMemory()
+    testRam8()
+    testMemory()
+    testmux8way16()
+    testDemux8way()
+    testRam64()
+    testBit()
+    print('All Chips Tested')
