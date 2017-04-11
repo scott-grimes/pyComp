@@ -1,1 +1,1 @@
-__all__ = ["Assembler","VM_translator"]
+__all__ = ["Assembler","VM_translator","VM_translator_HalfBuilt"]

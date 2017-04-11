@@ -5,7 +5,6 @@ from pyComp.Test_Suite.WorkingTests import decToBin,binToDec,generalTester
 from pyComp.Hardware.Chips import *
 from pyComp.Hardware.Components import *
 from pyComp.Software.VM_translator import Parser as vm
-from pyComp.Software.Assembler import Parser as ass
 
 class TEMPPC:
     #16 bit counter with load and reset controls
@@ -202,9 +201,7 @@ def testCPU():
                 myAnswers.append(myanswers)
     generalTester(desiredAnswers,myAnswers)
         
-
-#testCPU()
-#pyComp.Test_Suite.WorkingTests.testAll()
+"""
 vm_names = ['BasicTest','PointerTest','SimpleAdd','StackTest','StaticTest']
 for VMNAME in vm_names:
     pre = 'pyComp/Test_Suite/testFiles/vmFiles/'
@@ -213,7 +210,13 @@ for VMNAME in vm_names:
     sys.stdout=open(VMNAME+'.asm',"w")
     vm(fn,VMNAME)
     sys.stdout.close()
-    #sys.stdout = open(VMNAME+'.hack',"w")
-    #fn = os.path.join(os.path.dirname(__file__), VMNAME+'.asm')
-    #ass(fn)
-    #os.remove('assembly_from_VM_TEMP.txt')
+"""
+vm_names = ['BasicLoop']
+for VMNAME in vm_names:
+    pre = 'pyComp/Test_Suite/testFiles/advancedVMFiles/1_BasicLoop/'
+    fn = os.path.join(os.path.dirname(__file__), pre+VMNAME+'.vm')
+    
+    sys.stdout=open(VMNAME+'.asm',"w")
+    vm(fn,VMNAME)
+    sys.stdout.close()
+

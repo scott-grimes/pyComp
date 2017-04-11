@@ -1,5 +1,9 @@
 #reads in a VM file from stdargs[1] (the first argument) with name stdargs[2] (second arg), outputs assembly code to STDOUT
 #if no VM file is specified, stdin will be used to read in a file, so that code can be piped
+
+#NOTE! This half built translator will not handle if-goto methods or function calls
+#This translator will not bootstrap call Sys.init. Look at VM_translator.py
+#for the full VM translator implementation
 import sys
 
 class Parser:
@@ -59,22 +63,6 @@ class Parser:
             
         if c == 'arithmetic':
             self.writeArithmetic(line)
-            
-        arg1 = self.arg1(line)
-        
-        if c == 'label':
-            self.writeLabel(arg1)
-        if c == 'goto':
-            self.writeGoto(arg1)
-        
-        if c == 'function':
-            self.writeFunction(arg1,arg2(line))
-        if c == 'if':
-            self.writeIf(arg1)
-        if c == 'return':
-            self.writeReturn()
-        if c == 'call':
-            self.writeCall(arg1,arg2(line))
         
    
     
@@ -245,163 +233,7 @@ class Parser:
             
             print("M=D")
         return
-    
-    def writeLabel(self,label):
-        print('('+self.fileName+"$"+label+')')
 
-    def writeInit(self):
-        print('@256')
-        print('D=A')
-        print('@SP')
-        print('M=D')
-        self.writeCall('Sys.init',0)
-        
-    def writeGoto(self,label):
-        print('@'+self.fileName+'$'+label)
-        print("0;JMP")
-    
-    def writeIf(self,label):
-        print("@SP")
-        print("M=M-1")
-        print("A=M")
-        print("D=M")
-        print("M=0")
-        #if D==0 continue on, otherwise jump to the requesteddestination
-        print("@gotoif."+str(self.UniqueLabelID))
-        print("D;JEQ")
-        print("@"+fileName+"$"+label)
-        print("0;JMP")
-        print("(gotoif."+str(self.UniqueLabelID)+")")
-        self.UniqueLabelID+=1
-        
-    def writeCall(self,functionName,numArgs):
-        # before this is called n arguments should have been pushed onto stack
-        #
-        #push a return address using label declared at bottom 
-        print("@returnNum"+str(self.UniqueLabelID))
-        print("D=A")
-        print("@SP")
-        print("M=M+1")
-        print("A=M-1")
-        print("M=D")
-        #push lcl
-        print("@LCL")
-        self.pushM()
-        #push arg
-        print("@ARG")
-        self.pushM()
-        #push this
-        print("@THIS")
-        self.pushM()
-        #push that
-        print("@THAT")
-        self.pushM()
-        #arg = SP-n-5 (n is the number of arguments for the new function
-        print("@SP")
-        print("D=M")
-        print("@"+str(5+numArgs))
-        print("D=D-A")
-        print("@ARG")
-        print("M=D")
-        #lcl = sp
-        print("@SP")
-        print("D=M")
-        print("@LCL")
-        print("M=D")
-        #goto f (the function)
-        print("@"+self.functionName)
-        print("0;JMP")
-        #(return address label)
-        print("(returnNum"+String.valueOf(UniqueLabelID)+")")
-        self.UniqueLabelID+=1
-        
-    def pushM(self):
-        print("D=M")
-        print("@SP")
-        print("M=M+1")
-        print("A=M-1")
-        print("M=D")
-    
-    def writeReturn(self):
-        #FRAME = LCL
-        print("@LCL")
-        print("D=M")
-        print("@FRAME")
-        print("M=D")
-        
-        # RET = *(Frame-5)
-        print("@5")
-        print("D=A")
-        print("@FRAME")
-        print("A=M-D")
-        print("D=M") #D not has the return address saved
-        print("@RET")
-        print("M=D")
-        
-        #*ARG = pop()
-        print("@SP")
-        print("A=M-1")
-        print("D=M") #d is the return value now
-        print("M=0")
-        print("@ARG")
-        print("A=M")
-        print("M=D")
-        
-        #SP = ARG+1
-        print("@ARG")
-        print("D=M+1")
-        print("@SP")
-        print("M=D")
-        
-        #that = *(frame-1)
-        print("@1")
-        print("D=A")
-        print("@FRAME")
-        print("A=M-D")
-        print("D=M") 
-        print("@THAT")
-        print("M=D")
-        
-        #this = *(frame-2)
-        print("@2")
-        print("D=A")
-        print("@FRAME")
-        print("A=M-D")
-        print("D=M") 
-        print("@THIS")
-        print("M=D")
-        
-        #arg = *(frame-3)
-        print("@3")
-        print("D=A")
-        print("@FRAME")
-        print("A=M-D")
-        print("D=M") 
-        print("@ARG")
-        print("M=D")
-        
-        #lcl = *(frame-4)
-        print("@4")
-        print("D=A")
-        print("@FRAME")
-        print("A=M-D")
-        print("D=M") 
-        print("@LCL")
-        print("M=D")
-        
-        #go to RET
-        print("@RET")
-        print("A=M")
-        print("0;JMP")
-        
-    def writeFunction(self,functionName,numLocals):
-        print('('+functionName+')')
-        for i in range(numLocals):
-            print('@SP')
-            print('M=M+1')
-            print('A=M-1')
-            print('M=0')
-        
 if __name__ == "__main__":
     if(len(sys.argv)<2):
         Parser()
