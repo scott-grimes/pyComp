@@ -1,29 +1,25 @@
-#reads in a VM file from stdargs[1] (the first argument) with name stdargs[2] (second arg), outputs assembly code to STDOUT
-#if no VM file is specified, stdin will be used to read in a file, so that code can be piped
+#reads in all VM file in a given directory argv[1] (the first argument),
+#outputs assembly code to STDOUT
 import sys
+from os import listdir
+from os.path import isfile, join
 
 class Parser:
     
-    def __init__(self,filePath,fileName = False):
+    def __init__(self,folderPath):
         
         self.UniqueLabelID = 0
-        if fileName is False:
-            self.fileName = 'FileReadFromSTDIN'
-            for read_line in sys.stdin:
-                #remove newlines
-                line = read_line.strip('\n')
-                
-                #removes comments
-                line = line.split('//')[0]
-                
-                #ignores blank lines 
-                if line != '':
-                    
-                    self.buildLine(line)
-        else:
-            #a file was specified, open it and write our assembly code
+        #list of files in the given directory
+        fileNames = [f for f in listdir(folderPath) if (isfile(join(folderPath, f)) and f.endswith('.vm'))]
+        
+        #if Sys is in our file folder, bootstrap Sys.init call
+        if 'Sys.vm' in fileNames:
+            self.writeInit()
+        
+        #a file was specified, open it and write our assembly code
+        for fileName in fileNames:
             self.fileName = fileName
-            with open(filePath) as f:
+            with open(join(folderPath, fileName)) as f:
                 for read_line in f:
                     #remove newlines
                     line = read_line.strip('\n')
@@ -59,30 +55,27 @@ class Parser:
             
         if c == 'arithmetic':
             self.writeArithmetic(line)
-            
-        arg1 = self.arg1(line)
         
         if c == 'label':
-            self.writeLabel(arg1)
+            self.writeLabel(self.arg1(line))
         if c == 'goto':
-            self.writeGoto(arg1)
+            self.writeGoto(self.arg1(line))
         
         if c == 'function':
-            self.writeFunction(arg1,arg2(line))
+            self.writeFunction(self.arg1(line),self.arg2(line))
         if c == 'if':
-            self.writeIf(arg1)
+            self.writeIf(self.arg1(line))
         if c == 'return':
             self.writeReturn()
         if c == 'call':
-            self.writeCall(arg1,arg2(line))
+            self.writeCall(self.arg1(line),self.arg2(line))
         
-   
     
     def commandType(self,line):
         if 'push' in line     : return 'push';
         if 'pop' in line      :  return 'pop';
         if 'label' in line    : return 'label';
-        if 'if' in line       : return 'if-goto';
+        if 'if' in line       : return 'if';
         if 'goto' in line     : return 'goto';
         if 'function' in line : return 'function';
         if 'return' in line   : return 'return';
@@ -269,7 +262,7 @@ class Parser:
         #if D==0 continue on, otherwise jump to the requesteddestination
         print("@gotoif."+str(self.UniqueLabelID))
         print("D;JEQ")
-        print("@"+fileName+"$"+label)
+        print("@"+self.fileName+"$"+label)
         print("0;JMP")
         print("(gotoif."+str(self.UniqueLabelID)+")")
         self.UniqueLabelID+=1
@@ -309,10 +302,10 @@ class Parser:
         print("@LCL")
         print("M=D")
         #goto f (the function)
-        print("@"+self.functionName)
+        print("@"+functionName)
         print("0;JMP")
         #(return address label)
-        print("(returnNum"+String.valueOf(UniqueLabelID)+")")
+        print("(returnNum"+str(self.UniqueLabelID)+")")
         self.UniqueLabelID+=1
         
     def pushM(self):
@@ -395,6 +388,7 @@ class Parser:
         print("0;JMP")
         
     def writeFunction(self,functionName,numLocals):
+        #label f (the function)
         print('('+functionName+')')
         for i in range(numLocals):
             print('@SP')
@@ -403,7 +397,7 @@ class Parser:
             print('M=0')
         
 if __name__ == "__main__":
-    if(len(sys.argv)<2):
-        Parser()
+    if(len(sys.argv)<1):
+        print('no folder path given!')
     else:
-        Parser(sys.argv[1],sys.argv[1])
+        Parser(sys.argv[1])

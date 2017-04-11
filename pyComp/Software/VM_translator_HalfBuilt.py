@@ -70,7 +70,7 @@ class Parser:
         if 'push' in line     : return 'push';
         if 'pop' in line      :  return 'pop';
         if 'label' in line    : return 'label';
-        if 'if' in line       : return 'if-goto';
+        if 'if' in line       : return 'if';#was if-goto return
         if 'goto' in line     : return 'goto';
         if 'function' in line : return 'function';
         if 'return' in line   : return 'return';

@@ -211,12 +211,13 @@ for VMNAME in vm_names:
     vm(fn,VMNAME)
     sys.stdout.close()
 """
-vm_names = ['BasicLoop']
-for VMNAME in vm_names:
-    pre = 'pyComp/Test_Suite/testFiles/advancedVMFiles/1_BasicLoop/'
-    fn = os.path.join(os.path.dirname(__file__), pre+VMNAME+'.vm')
+"""
+folderNames = ['1_BasicLoop','2_FibonacciSeries','3_SimpleFunction','4_FibonacciElement','5_StaticsTest']
+prefix = 'pyComp/Test_Suite/testFiles/advancedVMFiles/'
+for folder in folderNames:
+    fn = os.path.join(os.path.dirname(__file__), prefix+folder)
     
-    sys.stdout=open(VMNAME+'.asm',"w")
-    vm(fn,VMNAME)
+    sys.stdout=open(folder[2:]+'.asm',"w")
+    vm(fn)
     sys.stdout.close()
-
+"""
