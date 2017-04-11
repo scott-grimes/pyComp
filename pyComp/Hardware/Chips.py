@@ -5,7 +5,7 @@ Each chip is composed of Gates built in Gates.py
 All gates are based on a single Nand gate
 
 """
-from Gates import *
+from .Gates import *
 
 def HalfAdder(a,b):
     #computes the sum, least significant bit of a+b,

@@ -1,23 +1,8 @@
-from Chips import *
-def binToDec(input,IgnoreNeg = False):
-    if(not IgnoreNeg):
-        makeNeg = False
-        if(input[0]==1):
-            makeNeg = True
-            #2's complement for neg values
-            input = Not16(input)
-            input = Inc16(input)
-        ans = sum(c*(2**i) for i,c in enumerate(input[::-1]))
-        if(makeNeg):
-            return -ans
-        return ans
-    else:
-        return sum(c*(2**i) for i,c in enumerate(input[::-1]))
+from .WorkingTests import *
+from ..Hardware.Chips import *
+import os
     
-class ROM():
-    pass
-
-class CPUOLD:
+class CPU:
     def __init__(self):
         self.PC = PC()
         self.ARegister = Register()
@@ -25,6 +10,7 @@ class CPUOLD:
         self.internalOutM = [0]*16
         self.isZero = 0
         self.isNeg = 0
+        
         
     def instruct(self,inM,instruction,reset):
         """
@@ -39,6 +25,7 @@ class CPUOLD:
             addressM[15],    // RAM address (of M)
             pc[15];          // ROM address (of next instruction)
         """
+       
         #fetch the last CPU executions values
         internalOutM = [i for i in self.internalOutM]
         isZero = self.isZero
@@ -54,7 +41,7 @@ class CPUOLD:
         functionAndAWrite = And(instruction[0], instruction[10])#was instruction 5
         isConstant = Not(instruction[0])
         loadA = Or(functionAndAWrite, isConstant)
-        aout = self.ARegister.register(muxed1, loadA)[:]
+        aout = self.ARegister.register(muxed1, loadA)
         
         A = [i for i in aout]
         addressM = [i for i in aout][1:]
@@ -85,7 +72,7 @@ class CPUOLD:
         
         #D Register
         loadD = And(instruction[11],instruction[0]) #was 4,15
-        D = self.DRegister.register(internalOutM, loadD)[:]
+        D = self.DRegister.register(internalOutM, loadD)
         
         #IN:X,Y,zx,nx,zy,ny,f,no
         #OUT: out,zr,ng
@@ -96,9 +83,11 @@ class CPUOLD:
                                 instruction[7],
                                 instruction[8], 
                                 instruction[9])
+        
         self.internalOutM = [i for i in outM]
         self.isZero = isZero
         self.isNeg = isNegative
+        
         
         #if write to m == 1 and if instruction is a command writem=1
         writeM = And(instruction[12],instruction[0])
@@ -125,19 +114,60 @@ class CPUOLD:
         print('D',binToDec(D))
         print()
         """
-        print('A',binToDec(A),' D',binToDec(D),)
+        print('A',binToDec(A),' D',binToDec(D))
         return outM, writeM,addressM,pc
 
-class Memory():
-    #in in[16], load, address[15]
-    #out out[16]
-    def __init__(self,debug = True):
-        if(debug):
-            self.ram = FASTRAM(24577)
-        else:
-            #implement built in chip memory here
-            pass
-        
-    def access(self,input,load,address):
-        return self.ram.access(input,load,address)
 
+def testCPU():
+    cpu = CPU()
+    desiredAnswers = []
+    myAnswers = []
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/cpu.tst')
+    
+    with open(fn, "r") as ins: 
+        badCount = 0
+        for line in ins:
+            if line[0] != '#':
+                parsed = line.strip('\n').replace(' ','').split(',')[:-1]
+                #inM  ,  instruction   ,reset, outM  ,writeM ,addre, pc  ,DRegiste,
+                inM = int(parsed[1])
+                inM = decToBin(inM)
+                
+                instruction = [int(i) for i in parsed[2]]
+                
+                rest = int(parsed[3])
+                
+                outM = parsed[4]
+                
+                writeM = int(parsed[5])
+                
+                addre = int(parsed[6])
+                
+                pc  = int(parsed[7])
+                
+                DRegister = int(parsed[8])
+                
+                myoutM, myWriteM,myaddressM,Mypc = cpu.instruct(inM,instruction,rest) #
+                MyD = cpu.DRegister.out
+                myoutM = binToDec(myoutM)
+                
+                myaddressM = binToDec(myaddressM,True)
+                
+                MyD = binToDec(MyD)
+                
+                Mypc = binToDec(Mypc,True)
+                if(outM!="*******"):
+                    outM=int(outM)
+                    
+                correctanswers = [outM,writeM,addre,pc,DRegister]
+                myanswers = [myoutM,myWriteM,myaddressM,Mypc,MyD]
+                print(correctanswers,myanswers)
+               
+                
+                    
+                
+                desiredAnswers.append(correctanswers)
+                myAnswers.append(myanswers)
+    generalTester(desiredAnswers,myAnswers)
+        
+testCPU()

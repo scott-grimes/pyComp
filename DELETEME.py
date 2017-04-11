@@ -1,5 +1,7 @@
-from WorkingTests import generalTester, decToBin, binToDec
-from Chips import PC
+#from WorkingTests import generalTester, decToBin, binToDec
+#from Chips import PC
+import pyComp,os
+from pyComp.Test_Suite.WorkingTests import decToBin,binToDec,generalTester
 class TEMPPC:
     #16 bit counter with load and reset controls
     #if reset(t) then out(t+1) = 0
@@ -35,7 +37,8 @@ def testPC():
     myAnswers = []
     pc = TEMPPC()
     #pc = PC()
-    with open("testFiles/chipFiles/testPC.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'pyComp/Test_Suite/testFiles/chipFiles/testPC.tst')
+    with open(fn, "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[2:-1]
@@ -50,4 +53,3 @@ def testPC():
                 desiredAnswers.append([out])
                 myAnswers.append([binToDec(myout)])
     generalTester(desiredAnswers,myAnswers)
-testPC()

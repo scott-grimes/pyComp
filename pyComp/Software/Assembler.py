@@ -1,4 +1,4 @@
-#reads in an assembler file from stdin, outputs machine code to stdout
+#reads in an assembly file from stdin, and outputs machine code to stdout
 import sys
 
 class Parser:

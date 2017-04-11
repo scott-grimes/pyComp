@@ -1,6 +1,8 @@
-from Chips import *
-from Gates import *
-from Components import *
+from ..Hardware.Chips import *
+from ..Hardware.Gates import *
+from ..Hardware.Components import *
+import os
+
 
 def generalTester(desired_outputs,my_outputs):
     badcount = 0
@@ -10,7 +12,7 @@ def generalTester(desired_outputs,my_outputs):
                 badcount+=1
                 print(i,j)
                 
-    print('I had '+str(badcount)+' incorrect answers')
+    print('Tested with '+str(badcount)+' incorrect answers out of '+str(len(desired_outputs)))
     
 
 def decToBin(input):
@@ -46,8 +48,10 @@ def binToDec(input,IgnoreNeg = False):
         return sum(c*(2**i) for i,c in enumerate(input[::-1]))
     
 def testALU(): 
-    print('testalu')
-    with open("testFiles/chipFiles/alu.tst", "r") as ins: 
+    print('Testing ALU')
+    
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/alu.tst')
+    with open(fn, "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
@@ -81,11 +85,12 @@ def testALU():
         print('I got '+str(badCount)+' incorrect')
               
 def testMemory():
-    print('testmemory')
+    print('Testing Memory')
     mem = Memory()  
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/memory.tst", "r") as ins:
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/memory.tst')
+    with open(fn, "r") as ins:
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')
@@ -101,11 +106,12 @@ def testMemory():
         
 def testRegister():
     
-    print('testing register')
+    print('Testing Register')
     reg = Register()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/register.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/register.tst')
+    with open(fn, "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -123,11 +129,12 @@ def testRegister():
     generalTester(desiredAnswers,myAnswers)
 
 def testRam8():
-    print('testram8')
+    print('Testing RAM8')
     ram8 = RAM8()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/ram8.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/ram8.tst')
+    with open(fn, "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -143,11 +150,12 @@ def testRam8():
     generalTester(myAnswers,desiredAnswers)
 
 def testRam64():
-    print('testRam64')
+    print('Testing Ram64')
     ram = RAM64()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/testRam64.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/testRam64.tst')
+    with open(fn, "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -163,11 +171,12 @@ def testRam64():
     generalTester(myAnswers,desiredAnswers)
 
 def testRAM16K():
-    print('testRam16k')
+    print('Testing RAM16K')
     ram = RAM16K()
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/testRam16k.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/testRam16k.tst')
+    with open(fn, "r") as ins: 
         
         for line in ins:
             if line[0] != '#':
@@ -184,10 +193,11 @@ def testRAM16K():
 #testRegister()            
 
 def testDemux8way():
-    print('testDmux8way')
+    print('Test Demux8way')
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/dmux8way.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/demux8way.tst')
+    with open(fn, "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[:-1]
@@ -201,9 +211,11 @@ def testDemux8way():
     generalTester(myAnswers,desiredAnswers)
 
 def testmux8way16():
+    print("Testing Mux8way16")
     desiredAnswers = []
     myAnswers = []
-    with open("testFiles/chipFiles/mux8way16.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/mux8way16.tst')
+    with open(fn, "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[:-1]
@@ -220,11 +232,12 @@ def testmux8way16():
                 
         generalTester(desiredAnswers,myAnswers)
 def testPC():
-    print('testPC')
+    print('Testing PC')
     desiredAnswers = []
     myAnswers = []
     pc = PC()
-    with open("testFiles/chipFiles/testPC.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/testPC.tst')
+    with open(fn, "r") as ins: 
         for line in ins:
             if line[0] != '#':
                 parsed = line.strip('\n').replace(' ','').split('|')[2:-1]
@@ -241,11 +254,13 @@ def testPC():
     generalTester(desiredAnswers,myAnswers)
     
 def testBit():
+    print("Testing Bit")
     bit = Bit()
     desiredAnswers = []
     myAnswers = []
     flipFlop = False
-    with open("testFiles/chipFiles/bit.tst", "r") as ins: 
+    fn = os.path.join(os.path.dirname(__file__), 'testFiles/chipFiles/bit.tst')
+    with open(fn, "r") as ins: 
         badCount = 0
         for line in ins:
             if line[0] != '#':
