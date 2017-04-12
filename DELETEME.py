@@ -4,7 +4,7 @@ import pyComp,os,sys
 from pyComp.Test_Suite.WorkingTests import decToBin,binToDec,generalTester
 from pyComp.Hardware.Chips import *
 from pyComp.Hardware.Components import *
-from pyComp.Software.VM_translator import Parser as vm
+from pyComp.Software.syntaxAnalyzer import *
 
 class TEMPPC:
     #16 bit counter with load and reset controls
@@ -221,5 +221,7 @@ for folder in folderNames:
     vm(fn)
     sys.stdout.close()
 """
-
+prefix = 'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/'
+fileName = 'Main.jack'
+syntaxAnalyzer(prefix+fileName)
 
