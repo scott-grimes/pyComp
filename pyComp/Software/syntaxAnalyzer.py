@@ -108,17 +108,17 @@ class Analyzer:
         #returns the type of token we have obtained
         
         if token[0] == "\"":
-            return 'STRING_CONST'
+            return 'string_const'
         
         if token in self.keywords:
-            return 'KEYWORD'
+            return 'keyword'
         if token in self.symbols:
-            return 'SYMBOL'
+            return 'symbol'
         if token[0].isdigit():
-            return 'INT_CONST'
+            return 'int_const'
         
         
-        return 'IDENTIFIER'
+        return 'identifier'
         
     def keyWord(self,token):
         #returns the keyword of the current 
@@ -159,7 +159,7 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         token = f.advance()
-        self.out(token) #class
+        self.out(token) #class keyword
         token = f.advance()
         self.out(token) #class name
         token = f.advance()
@@ -194,7 +194,6 @@ class CompileJack:
         self.out(token)
         token = f.advance() #varName or ','
         self.out(token)
-        token = f.advance() # '('
         while token != ';':
             token = f.advance() #varName or ',' or ';'
             self.out(token)
@@ -208,6 +207,8 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         token = f.advance() #type
+        self.out(token)
+        token = f.advance() #returns
         self.out(token)
         token = f.advance() #subroutineName
         self.out(token)
@@ -239,7 +240,6 @@ class CompileJack:
             peek = f.peek()
         self.indent -=1
         self.print_tag('</parameterList>')
-        
             
     def CompileSubroutineBody(self):
         self.print_tag('<subroutineBody>')
@@ -260,8 +260,6 @@ class CompileJack:
         self.indent -=1
         self.print_tag('</subroutineBody>')
 
-        
-        
     def CompileVarDec(self):
         self.print_tag('<varDec>')
         self.indent +=1
@@ -293,13 +291,10 @@ class CompileJack:
         if peek == 'do': self.CompileDo()
         if peek == 'return': self.CompileReturn()
         
-        if(f.peek() in ['let','if','while','do','return']):
-            self.CompileStatements()
         
         self.indent -=1
         self.print_tag('</statements>')
         
-    
     def CompileDo(self):
         self.print_tag('<doStatement>')
         self.indent +=1
@@ -346,7 +341,6 @@ class CompileJack:
         self.indent -=1
         self.print_tag('</letStatement>')
         
-        
     def CompileWhile(self):
         self.print_tag('<whileStatement>')
         self.indent +=1
@@ -373,7 +367,6 @@ class CompileJack:
         self.out(token)# '}'
         self.indent -=1
         self.print_tag('</whileStatement>')
-        
         
     def CompileReturn(self):
         f = self.fetch
@@ -411,7 +404,6 @@ class CompileJack:
         self.indent -=1
         self.print_tag('</ifStatement>')
         
-        
     def CompileExpression(self):
         self.print_tag('<expression>')
         self.indent +=1
@@ -422,6 +414,8 @@ class CompileJack:
         peek = f.peek()
         while(peek in ['+','-','*','/','&','|','<',
                        '>','=']):
+            token = f.advance()
+            self.out(token)# op 
             self.CompileTerm()
             peek = f.peek()
         
@@ -436,13 +430,12 @@ class CompileJack:
         
         token = f.advance() #some term
         type = f.tokenType(token)
-        self.out(token)
         
-        if type == 'STRING_CONST':
+        if type == 'string_const':
              self.out(f.stringVal(token)) #prints a string
-        elif type == 'KEYWORD':
+        elif type == 'keyword':
             self.out(f.keyWord(token))
-        elif type == 'SYMBOL':
+        elif type == 'symbol':
             if(token == '('):
                 #I have an (expression)
                 self.out(token)#'('
@@ -454,9 +447,9 @@ class CompileJack:
                 self.out(token)#')'
             else:
                 self.out(token)
-        elif type == 'INT_CONST':
+        elif type == 'int_const':
             self.out(f.intVal(token))
-        elif type == 'IDENTIFIER':
+        elif type == 'identifier':
             #an identifier may be either a 
             # subroutine
             # varName
@@ -468,12 +461,12 @@ class CompileJack:
             while(peek == '.'):
                 #we have a subroutine call!
                 subroutine = True
-                token+=f.advance() # adds '.' to our subroutine call
-                token+=f.advance() #addres next method name to our subroutine call
+                self.out(token)
+                token=f.advance() # pulls the '.' from our subroutine call
+                self.out(token) #'.'
                 peek = f.peek()
-            
+                
             if(subroutine):
-                self.out(token)# subroutineName
                 token = f.advance()
                 self.out(token)# '('
                 self.CompileSubroutineCall()
@@ -494,10 +487,20 @@ class CompileJack:
         self.indent -=1
         self.print_tag('</term>')
                 
-        
-        
     def CompileExpressionList(self):
-        pass
+        f = self.fetch
+        peek = f.peek()
+        while(peek!= ')'):
+            print(peek)
+            print()
+            self.CompileExpression()
+            peek = f.peek()
+            if(peek == ','):
+                token = f.advance()
+                self.out(token)#','
+                peek = f.peek()
+            pass
+
     
     def CompileSubroutineCall(self):
         f = self.fetch
@@ -505,9 +508,6 @@ class CompileJack:
         self.out(token)# subroutineName or className
         token = f.advance()
         self.out(token)# '(' or '.'
-        while(token != '('):
-            token = f.advance()
-            self.out(token)# '(' or '.' or subroutine name or className
         self.CompileExpressionList()
         token = f.advance()
         self.out(token)#')'
