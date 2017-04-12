@@ -1,9 +1,6 @@
 #this does some shit 
 import sys
-from sympy.core.numbers import IntegerConstant
-class syntaxAnalyzer:
-    
-    
+class Analyzer:
     
     def __init__(self,file_with_path):
         self.keywords = ['class',
@@ -53,17 +50,18 @@ class syntaxAnalyzer:
         
         #replaces all groups of whitespace with single whitespaces
         #inputStream = ' '.join(inputStream.split())
-        while(self.hasMoreTokens()):
-            token = self.advance()
-            type = self.tokenType(token)
-            print(type,':',token)
-        pass
+        
+        
     
     def hasMoreTokens(self):
         return (len(self.inputStream.replace(' ',''))>0)
     
     def advance(self):
-        #returns the next token
+        #returns the next token. If no tokens left,
+        #returns None
+        
+        if(not self.hasMoreTokens()):
+            return None
         
         #removes leading whitespace
         self.inputStream = self.inputStream.lstrip()
@@ -97,38 +95,435 @@ class syntaxAnalyzer:
         token = potential_token
         self.inputStream = self.inputStream[len(token):].lstrip()
         return token
-        
+    
+    def peek(self):
+        #returns the next symbol without removing it from the stream
+        if(not self.hasMoreTokens()):
+            return None
+        token = self.advance()
+        self.inputStream = token+" "+self.inputStream
+        return token
             
     def tokenType(self,token):
         #returns the type of token we have obtained
+        
         if token[0] == "\"":
-            return 'StringConstant'
+            return 'STRING_CONST'
         
         if token in self.keywords:
-            return 'keyword'
+            return 'KEYWORD'
         if token in self.symbols:
-            return 'symbol'
+            return 'SYMBOL'
         if token[0].isdigit():
-            return 'IntegerConstant'
+            return 'INT_CONST'
         
-        return 'identifier'
+        
+        return 'IDENTIFIER'
+        
+    def keyWord(self,token):
+        #returns the keyword of the current 
+        #token
+        
+        return token
+    def intVal(self,token):
+        return int(token)
+    def stringVal(self,token):
+        return token.replace("\"",'')
+        
+class CompileJack:
+    
+    def __init__(self,file_with_path):
+        self.fetch = Analyzer(file_with_path)
+        self.indent = 0
+        self.CompileClass()
+        return
+    def print_tag(self,tag):
+        for i in range(self.indent):
+            print('  ',end='')
+        print(tag)
+        
+    def out(self,token):
+        for i in range(self.indent):
+            print('  ',end='')
+        if(isinstance( token, int )):
+           type = self.fetch.tokenType(str(token))
+           print("<"+type+"> "+str(token)+" </"+type+">")
+        
+        else:
+            type = self.fetch.tokenType(token)
+            print("<"+type+"> "+token+" </"+type+">")
         
     
-    def JackAnalyzer(self):
+    def CompileClass(self):
+        self.print_tag('<class>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance()
+        self.out(token) #class
+        token = f.advance()
+        self.out(token) #class name
+        token = f.advance()
+        self.out(token) #{
+        
+        peek = f.peek() #class Var Dec
+        while(peek in ['static','field']):
+            print('peek: '+peek)
+            self.CompileClassVarDec()
+            peek = f.peek()
+        
+        #class subroutine Dec
+        while(peek in ['constructor','function',
+                    'method','void']):
+            self.CompileSubroutine()
+            peek = f.peek()
+            
+        token = f.advance()
+        self.out(token) #}
+        self.indent-=1
+        self.print_tag('</class>')
+        
+        return
+    
+    def CompileClassVarDec(self):
+        self.print_tag('<classVarDec>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance() #type
+        self.out(token)
+        token = f.advance() #varName
+        self.out(token)
+        token = f.advance() #varName or ','
+        self.out(token)
+        token = f.advance() # '('
+        while token != ';':
+            token = f.advance() #varName or ',' or ';'
+            self.out(token)
+        
+        
+        self.indent -=1
+        self.print_tag('</classVarDec>')
+        
+    def CompileSubroutine(self):
+        self.print_tag('<subroutineDec>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance() #type
+        self.out(token)
+        token = f.advance() #subroutineName
+        self.out(token)
+        token = f.advance() # '('
+        self.out(token)
+        
+        self.CompileParameterList()
+        
+        
+        token = f.advance() # ')'
+        self.out(token)
+        
+        self.CompileSubroutineBody()
+        self.indent -=1
+        self.print_tag('</subroutineDec>')
+        
+        return
+    
+    def CompileParameterList(self):
+        
+        self.print_tag('<parameterList>')
+        
+        self.indent +=1
+        f= self.fetch
+        peek = f.peek()
+        while peek != ')':
+            token = f.advance()
+            self.out(token) # ',' or type or varName
+            peek = f.peek()
+        self.indent -=1
+        self.print_tag('</parameterList>')
+        
+            
+    def CompileSubroutineBody(self):
+        self.print_tag('<subroutineBody>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance() # '{'
+        self.out(token)
+        
+        peek = f.peek()
+        while(peek != '}'):
+            while(peek == 'var'):
+                self.CompileVarDec()
+                peek = f.peek()
+            self.CompileStatements()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# '}'
+        self.indent -=1
+        self.print_tag('</subroutineBody>')
+
+        
+        
+    def CompileVarDec(self):
+        self.print_tag('<varDec>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance() 
+        self.out(token) #var
+        token = f.advance() 
+        self.out(token) #type
+        token = f.advance() 
+        self.out(token) #varName
+        while token != ';':
+            token = f.advance() #varName or ',' or ';'
+            self.out(token)
+        self.indent -=1
+        self.print_tag('</varDec>')
+            
+    def CompileStatements(self):
+        self.print_tag('<statements>')
+        self.indent +=1
+        f = self.fetch
+        peek = f.peek()
+        if(not peek):
+            return
+        if(peek == 'readInt'):
+            sys.exit()
+        if peek == 'let': self.CompileLet()
+        if peek == 'if': self.CompileIf()
+        if peek == 'while': self.CompileWhile()
+        if peek == 'do': self.CompileDo()
+        if peek == 'return': self.CompileReturn()
+        
+        if(f.peek() in ['let','if','while','do','return']):
+            self.CompileStatements()
+        
+        self.indent -=1
+        self.print_tag('</statements>')
+        
+    
+    def CompileDo(self):
+        self.print_tag('<doStatement>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance()
+        self.out(token)# do
+        peek = f.peek()
+        while(peek != ';'):
+            self.CompileSubroutineCall()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# ';'
+        self.indent -=1
+        self.print_tag('</doStatement>')
+        
+    def CompileLet(self):
+        self.print_tag('<letStatement>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance()
+        self.out(token)# let
+        token = f.advance()
+        self.out(token)# varName
+        peek = f.peek()
+        if(peek == '['):
+            token = f.advance()
+            self.out(token)#'['
+            peek = f.peek()
+            while(peek !=']'):
+                self.CompileExpression()
+                peek = f.peek()
+            token = f.advance()
+            self.out(token)#']'
+        
+        token = f.advance()
+        self.out(token)# '='
+        
+        peek = f.peek()
+        while(peek != ';'):
+            self.CompileExpression()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# ';'
+        self.indent -=1
+        self.print_tag('</letStatement>')
+        
+        
+    def CompileWhile(self):
+        self.print_tag('<whileStatement>')
+        self.indent +=1
+        
+        f = self.fetch
+        
+        token = f.advance()
+        self.out(token)# while
+        token = f.advance()
+        self.out(token)#'('
+        peek = f.peek()
+        while(peek != ')'):
+            self.CompileExpression()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# ')'
+        token = f.advance()
+        self.out(token)# '{'
+        peek = f.peek()
+        while(peek !='}'):
+            self.CompileStatements()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# '}'
+        self.indent -=1
+        self.print_tag('</whileStatement>')
+        
+        
+    def CompileReturn(self):
+        f = self.fetch
+        token = f.advance()
+        self.out(token)# return
+        peek = f.peek()
+        while(peek != ';'):
+            self.CompileExpression()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# ';'
+        
+    def CompileIf(self):
+        self.print_tag('<ifStatement>')
+        self.indent +=1
+        f = self.fetch
+        token = f.advance()
+        self.out(token)# if
+        token = f.advance()
+        self.out(token) #'('
+        peek = f.peek()
+        while(peek != ')'):
+            self.CompileExpression()
+            peek = f.peek()
+        token = f.advance()
+        self.out(token)# ')'
+        token = f.advance()
+        self.out(token)# '{'
+        peek = f.peek()
+        while(peek!= '}'):
+            self.CompileStatements()
+        token = f.advance()
+        self.out(token)# '}'
+        
+        self.indent -=1
+        self.print_tag('</ifStatement>')
+        
+        
+    def CompileExpression(self):
+        self.print_tag('<expression>')
+        self.indent +=1
+        #term (op term)*
+        f = self.fetch
+        
+        self.CompileTerm()
+        peek = f.peek()
+        while(peek in ['+','-','*','/','&','|','<',
+                       '>','=']):
+            self.CompileTerm()
+            peek = f.peek()
+        
+        self.indent -=1
+        self.print_tag('</expression>')
+        
+    def CompileTerm(self):
+        
+        self.print_tag('<term>')
+        self.indent +=1
+        f = self.fetch
+        
+        token = f.advance() #some term
+        type = f.tokenType(token)
+        self.out(token)
+        
+        if type == 'STRING_CONST':
+             self.out(f.stringVal(token)) #prints a string
+        elif type == 'KEYWORD':
+            self.out(f.keyWord(token))
+        elif type == 'SYMBOL':
+            if(token == '('):
+                #I have an (expression)
+                self.out(token)#'('
+                peek = f.peek()
+                while(peek != ')'):
+                    self.CompileExpression()
+                    peek = f.peek()
+                token = self.out(token)
+                self.out(token)#')'
+            else:
+                self.out(token)
+        elif type == 'INT_CONST':
+            self.out(f.intVal(token))
+        elif type == 'IDENTIFIER':
+            #an identifier may be either a 
+            # subroutine
+            # varName
+            # varName [ expression ]
+            
+            #checking for a subroutine
+            subroutine = False
+            peek = f.peek()
+            while(peek == '.'):
+                #we have a subroutine call!
+                subroutine = True
+                token+=f.advance() # adds '.' to our subroutine call
+                token+=f.advance() #addres next method name to our subroutine call
+                peek = f.peek()
+            
+            if(subroutine):
+                self.out(token)# subroutineName
+                token = f.advance()
+                self.out(token)# '('
+                self.CompileSubroutineCall()
+                token = f.advance()
+                self.out(token)# ')'
+            else:
+                #our identifier is either
+                #varName or
+                #varName [expression]
+                self.out(token)# varName
+                peek = f.peek()
+                if(peek == '['):
+                    token = f.advance()
+                    self.out(token)#'['
+                    self.CompileExpression()
+                    token = f.advance()
+                    self.out(token)#']'
+        self.indent -=1
+        self.print_tag('</term>')
+                
+        
+        
+    def CompileExpressionList(self):
         pass
     
-    def JackTokenizer(self):
+    def CompileSubroutineCall(self):
+        f = self.fetch
+        token = f.advance()
+        self.out(token)# subroutineName or className
+        token = f.advance()
+        self.out(token)# '(' or '.'
+        while(token != '('):
+            token = f.advance()
+            self.out(token)# '(' or '.' or subroutine name or className
+        self.CompileExpressionList()
+        token = f.advance()
+        self.out(token)#')'
+        return
+        
+        
         pass
     
-    def CompilationEngine(self):
-        pass
+    
     
 if __name__ == "__main__":
     try:
         if(len(sys.argv)<2):
             print('No input file specified!')
         else:
-            syntaxAnalyzer(sys.argv[1])
+            CompilationEngine(sys.argv[1])
     except Exception as e:
         print(e)
         input()

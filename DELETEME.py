@@ -223,5 +223,5 @@ for folder in folderNames:
 """
 prefix = 'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/'
 fileName = 'Main.jack'
-syntaxAnalyzer(prefix+fileName)
+CompileJack(prefix+fileName)
 
