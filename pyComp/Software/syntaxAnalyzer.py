@@ -50,9 +50,7 @@ class Analyzer:
         
         #replaces all groups of whitespace with single whitespaces
         #inputStream = ' '.join(inputStream.split())
-        
-        
-    
+       
     def hasMoreTokens(self):
         return (len(self.inputStream.replace(' ',''))>0)
     
@@ -125,8 +123,10 @@ class Analyzer:
         #token
         
         return token
+
     def intVal(self,token):
         return int(token)
+    
     def stringVal(self,token):
         return token.replace("\"",'')
         
@@ -330,10 +330,11 @@ class CompileJack:
             self.out(token)#']'
         
         token = f.advance()
-        self.out(token)# '='
+        self.out(token)# '=' 
         
         peek = f.peek()
         while(peek != ';'):
+            
             self.CompileExpression()
             peek = f.peek()
         token = f.advance()
