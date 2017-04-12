@@ -222,6 +222,6 @@ for folder in folderNames:
     sys.stdout.close()
 """
 prefix = 'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/'
-fileName = 'Main.jack'
+fileName = 'Main.jack' 
 CompileJack(prefix+fileName)
 
