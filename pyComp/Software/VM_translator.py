@@ -1,5 +1,5 @@
 #reads in all VM files in a given directory (the first argument passed),
-#outputs assembly code to STDOUT
+#outputs assembly code to the given directory as an assembly file
 import sys
 from os import listdir
 from os.path import isfile, join
@@ -11,6 +11,11 @@ class Parser:
         self.UniqueLabelID = 0
         #list of files in the given directory
         fileNames = [f for f in listdir(folderPath) if (isfile(join(folderPath, f)) and f.endswith('.vm'))]
+        
+        #rediret stdout to our assembly file
+        folder_name = folderPath.split('\\')[-1]
+        outputFileName = folderPath+'\\'+folder_name+'.asm'
+        sys.stdout = open(outputFileName, 'w')
         
         #if Sys is in our file folder, bootstrap Sys.init call
         if 'Sys.vm' in fileNames:
@@ -397,7 +402,13 @@ class Parser:
             print('M=0')
         
 if __name__ == "__main__":
-    if(len(sys.argv)<2):
-        print('no folder path given!')
-    else:
-        Parser(sys.argv[1])
+    
+    try:
+        if(len(sys.argv)<2):
+            print('no folder path given!')
+        else:
+            Parser(sys.argv[1])
+    except Exception as e:
+        print(e)
+        input()
+        sys.exit()

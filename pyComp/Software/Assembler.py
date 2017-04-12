@@ -224,7 +224,12 @@ class Code:
         return "000"
 
 if __name__ == "__main__":
-    if(len(sys.argv)<2):
-        print('No assembly file specified!')
-    else:
-        Parser(sys.argv[1])
+    try:
+        if(len(sys.argv)<2):
+            print('No assembly file specified!')
+        else:
+            Parser(sys.argv[1])
+    except Exception as e:
+        print(e)
+        input()
+        sys.exit()
