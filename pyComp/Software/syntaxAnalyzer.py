@@ -210,25 +210,24 @@ class CompileJack:
         self.out(token)
         token = f.advance() #returns
         self.out(token)
-        token = f.advance() #subroutineName
+        token = f.advance() #subroutineName 
         self.out(token)
         token = f.advance() # '('
         self.out(token)
         
         self.CompileParameterList()
         
-        
         token = f.advance() # ')'
         self.out(token)
         
         self.CompileSubroutineBody()
+        
         self.indent -=1
         self.print_tag('</subroutineDec>')
         
         return
     
     def CompileParameterList(self):
-        
         self.print_tag('<parameterList>')
         
         self.indent +=1
@@ -281,16 +280,16 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         peek = f.peek()
+        if(peek == 'readInt'):
+            self.out(peek)
+            sys.exit()
         if(not peek):
             return
-        if(peek == 'readInt'):
-            sys.exit()
         if peek == 'let': self.CompileLet()
         if peek == 'if': self.CompileIf()
         if peek == 'while': self.CompileWhile()
         if peek == 'do': self.CompileDo()
         if peek == 'return': self.CompileReturn()
-        
         
         self.indent -=1
         self.print_tag('</statements>')
@@ -323,20 +322,16 @@ class CompileJack:
             token = f.advance()
             self.out(token)#'['
             peek = f.peek()
-            while(peek !=']'):
+            if(peek !=']'):
                 self.CompileExpression()
-                peek = f.peek()
             token = f.advance()
             self.out(token)#']'
         
         token = f.advance()
         self.out(token)# '=' 
         
-        peek = f.peek()
-        while(peek != ';'):
-            
-            self.CompileExpression()
-            peek = f.peek()
+        self.CompileExpression()
+        
         token = f.advance()
         self.out(token)# ';'
         self.indent -=1
@@ -410,98 +405,50 @@ class CompileJack:
         self.indent +=1
         #term (op term)*
         f = self.fetch
-        
-        self.CompileTerm()
         peek = f.peek()
-        while(peek in ['+','-','*','/','&','|','<',
+        if(peek not in [';',')',']']):
+            self.CompileTerm()
+        peek = f.peek()
+        if(peek in ['+','-','*','/','&','|','<',
                        '>','=']):
             token = f.advance()
             self.out(token)# op 
             self.CompileTerm()
-            peek = f.peek()
         
         self.indent -=1
         self.print_tag('</expression>')
         
     def CompileTerm(self):
-        
+        #term (op term)*
         self.print_tag('<term>')
         self.indent +=1
         f = self.fetch
+        peek = f.peek()
+        
         
         token = f.advance() #some term
         type = f.tokenType(token)
-        
-        if type == 'string_const':
-             self.out(f.stringVal(token)) #prints a string
-        elif type == 'keyword':
-            self.out(f.keyWord(token))
-        elif type == 'symbol':
-            if(token == '('):
-                #I have an (expression)
-                self.out(token)#'('
-                peek = f.peek()
-                while(peek != ')'):
-                    self.CompileExpression()
-                    peek = f.peek()
-                token = self.out(token)
-                self.out(token)#')'
-            else:
-                self.out(token)
-        elif type == 'int_const':
-            self.out(f.intVal(token))
-        elif type == 'identifier':
-            #an identifier may be either a 
-            # subroutine
-            # varName
-            # varName [ expression ]
-            
-            #checking for a subroutine
-            subroutine = False
-            peek = f.peek()
-            while(peek == '.'):
-                #we have a subroutine call!
-                subroutine = True
-                self.out(token)
-                token=f.advance() # pulls the '.' from our subroutine call
-                self.out(token) #'.'
-                peek = f.peek()
-                
-            if(subroutine):
-                token = f.advance()
-                self.out(token)# '('
-                self.CompileSubroutineCall()
-                token = f.advance()
-                self.out(token)# ')'
-            else:
-                #our identifier is either
-                #varName or
-                #varName [expression]
-                self.out(token)# varName
-                peek = f.peek()
-                if(peek == '['):
-                    token = f.advance()
-                    self.out(token)#'['
-                    self.CompileExpression()
-                    token = f.advance()
-                    self.out(token)#']'
+        self.out(token)
         self.indent -=1
         self.print_tag('</term>')
                 
     def CompileExpressionList(self):
+        self.print_tag('<expressionList>')
+        self.indent+=1
         f = self.fetch
         peek = f.peek()
-        while(peek!= ')'):
-            print(peek)
-            print()
+        while(peek not in [')',';',']']):
             self.CompileExpression()
             peek = f.peek()
             if(peek == ','):
                 token = f.advance()
                 self.out(token)#','
                 peek = f.peek()
+                
             pass
-
+        
+        self.indent-=1
+        self.print_tag('</expressionList>')
     
     def CompileSubroutineCall(self):
         f = self.fetch
