@@ -1,5 +1,7 @@
-#this does some shit 
+#Parses a .jack file into an xml file. this is done to assist in the compiling of a jack language
+#file into a vm file
 import sys
+
 class Analyzer:
     
     def __init__(self,file_with_path):
@@ -48,8 +50,9 @@ class Analyzer:
         #removes newlines
         self.inputStream = inputStream.replace('\n',' ')
         
-        #replaces all groups of whitespace with single whitespaces
-        #inputStream = ' '.join(inputStream.split())
+        #redirects stdout to our file
+        outputFile = file_with_path.replace('.jack','.vm')
+        #sys.stdout=open(outputFile,"w")
        
     def hasMoreTokens(self):
         return (len(self.inputStream.replace(' ',''))>0)
@@ -106,14 +109,14 @@ class Analyzer:
         #returns the type of token we have obtained
         
         if token[0] == "\"":
-            return 'string_const'
+            return 'stringConstant'
         
         if token in self.keywords:
             return 'keyword'
         if token in self.symbols:
             return 'symbol'
         if token[0].isdigit():
-            return 'int_const'
+            return 'integerConstant'
         
         
         return 'identifier'
@@ -121,14 +124,13 @@ class Analyzer:
     def keyWord(self,token):
         #returns the keyword of the current 
         #token
-        
         return token
 
     def intVal(self,token):
         return int(token)
     
     def stringVal(self,token):
-        return token.replace("\"",'')
+        return token[1:-1] #strips the quotes off of our token
         
 class CompileJack:
     
@@ -137,20 +139,42 @@ class CompileJack:
         self.indent = 0
         self.CompileClass()
         return
+    
     def print_tag(self,tag): 
         for i in range(self.indent):
             print('  ',end='')
         print(tag)
         
+        
+    def xml_ify(self,token):
+        #replaces the characters <,>,",and " with their xml equivalants
+        token = token.replace("&",'&amp;')
+        token = token.replace('<','&lt;')
+        token = token.replace('>','&gt;')
+        token = token.replace("\"",'&quot;')
+        return token
     def out(self,token):
+        #prints out the parsed XML line
+        
+        #indent for readability
         for i in range(self.indent):
             print('  ',end='')
+            
+        #check if we have an int
         if(isinstance( token, int )):
            type = self.fetch.tokenType(str(token))
            print("<"+type+"> "+str(token)+" </"+type+">")
         
+        #we have a string
         else:
             type = self.fetch.tokenType(token)
+            
+            #remove quotes form string constants, otherwise just print the type and string
+            if type == 'stringConstant':
+                token = self.fetch.stringVal(token)
+                
+            #removes non-xml-compatable characters from our token
+            token = self.xml_ify(token)
             print("<"+type+"> "+token+" </"+type+">")
         
     
@@ -206,9 +230,9 @@ class CompileJack:
         self.print_tag('<subroutineDec>')
         self.indent +=1
         f = self.fetch
-        token = f.advance() #type
+        token = f.advance() #constructor/function/method
         self.out(token)
-        token = f.advance() #returns
+        token = f.advance() #return type or void
         self.out(token)
         token = f.advance() #subroutineName 
         self.out(token)
@@ -228,6 +252,7 @@ class CompileJack:
         return
     
     def CompileParameterList(self):
+        #((type varName)(','type varName)*)?
         self.print_tag('<parameterList>')
         
         self.indent +=1
@@ -280,19 +305,22 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         peek = f.peek()
-        if(peek == 'readInt'):
-            self.out(peek)
-            sys.exit()
-        if(not peek):
-            return
+        while(peek in ['let','if','while','do','return']):
+            self.CompileStatement()
+            peek = f.peek()
+        
+        self.indent -=1
+        self.print_tag('</statements>')
+        
+    def CompileStatement(self):
+        f = self.fetch
+        peek = f.peek()
         if peek == 'let': self.CompileLet()
         if peek == 'if': self.CompileIf()
         if peek == 'while': self.CompileWhile()
         if peek == 'do': self.CompileDo()
         if peek == 'return': self.CompileReturn()
         
-        self.indent -=1
-        self.print_tag('</statements>')
         
     def CompileDo(self):
         self.print_tag('<doStatement>')
@@ -365,6 +393,8 @@ class CompileJack:
         self.print_tag('</whileStatement>')
         
     def CompileReturn(self):
+        self.print_tag('<returnStatement>')
+        self.indent +=1
         f = self.fetch
         token = f.advance()
         self.out(token)# return
@@ -374,6 +404,8 @@ class CompileJack:
             peek = f.peek()
         token = f.advance()
         self.out(token)# ';'
+        self.indent -=1
+        self.print_tag('</returnStatement>')
         
     def CompileIf(self):
         self.print_tag('<ifStatement>')
@@ -406,29 +438,62 @@ class CompileJack:
         #term (op term)*
         f = self.fetch
         peek = f.peek()
-        if(peek not in [';',')',']']):
-            self.CompileTerm()
+        self.CompileTerm()
         peek = f.peek()
-        if(peek in ['+','-','*','/','&','|','<',
-                       '>','=']):
+        while peek in ['+','-','*','/','&','|',
+                    '<','>','=']:
             token = f.advance()
-            self.out(token)# op 
+            self.out(token)# OP
             self.CompileTerm()
+            peek = f.peek()
         
         self.indent -=1
         self.print_tag('</expression>')
         
     def CompileTerm(self):
         #term (op term)*
+        #if term is identifier, distinguish between
+        #[ ( or .
         self.print_tag('<term>')
         self.indent +=1
         f = self.fetch
-        peek = f.peek()
-        
-        
-        token = f.advance() #some term
+        token = f.advance()
         type = f.tokenType(token)
-        self.out(token)
+        
+        if type =='integerConstant':
+            self.out(f.intVal(token))
+        elif type == 'stringConstant':
+            self.out(token)
+        elif type =='keyword':
+            self.out(token)
+            
+        #( expression )
+        elif token == '(':
+            self.out(token)#(
+            self.CompileExpression()
+            token = f.advance()
+            self.out(token)#)
+        elif type in ['-','~']:
+            self.out(token)
+        elif type == 'identifier':
+            self.out(token)
+            peek = f.peek()
+           
+           #subroutine call
+            if peek =='.':
+                self.CompileSubroutineCall()
+                
+            #varName [ expression ]
+            elif peek == '[':
+                token = f.advance()
+                self.out(token) #[
+                self.CompileExpression()
+                token = f.advance()
+                self.out(token)# ]
+            
+            
+            #variable
+        
         self.indent -=1
         self.print_tag('</term>')
                 
@@ -437,7 +502,7 @@ class CompileJack:
         self.indent+=1
         f = self.fetch
         peek = f.peek()
-        while(peek not in [')',';',']']):
+        while(peek != ')'):
             self.CompileExpression()
             peek = f.peek()
             if(peek == ','):
@@ -445,7 +510,6 @@ class CompileJack:
                 self.out(token)#','
                 peek = f.peek()
                 
-            pass
         
         self.indent-=1
         self.print_tag('</expressionList>')
@@ -453,16 +517,16 @@ class CompileJack:
     def CompileSubroutineCall(self):
         f = self.fetch
         token = f.advance()
-        self.out(token)# subroutineName or className
-        token = f.advance()
-        self.out(token)# '(' or '.'
+        while(token!= '('):
+            self.out(token)
+            token = f.advance()
+        self.out(token)# (
+        
         self.CompileExpressionList()
         token = f.advance()
         self.out(token)#')'
         return
         
-        
-        pass
     
     
     

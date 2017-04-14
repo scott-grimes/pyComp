@@ -223,5 +223,7 @@ for folder in folderNames:
 """
 prefix = 'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/'
 fileName = 'Main.jack' 
+outPutFile = 'My'+fileName.replace('.jack','.xmlvm')
+sys.stdout=open(outPutFile,"w")
 CompileJack(prefix+fileName)
 
