@@ -153,6 +153,7 @@ class CompileJack:
         token = token.replace('>','&gt;')
         token = token.replace("\"",'&quot;')
         return token
+    
     def out(self,token):
         #prints out the parsed XML line
         
@@ -305,6 +306,7 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         peek = f.peek()
+        print(peek)
         while(peek in ['let','if','while','do','return']):
             self.CompileStatement()
             peek = f.peek()

@@ -5,6 +5,7 @@ from pyComp.Test_Suite.WorkingTests import decToBin,binToDec,generalTester
 from pyComp.Hardware.Chips import *
 from pyComp.Hardware.Components import *
 from pyComp.Software.syntaxAnalyzer import *
+from pyComp.Test_Suite.CompareFiles import CompareFiles
 
 class TEMPPC:
     #16 bit counter with load and reset controls
@@ -221,9 +222,19 @@ for folder in folderNames:
     vm(fn)
     sys.stdout.close()
 """
-prefix = 'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/'
-fileName = 'Main.jack' 
-outPutFile = 'My'+fileName.replace('.jack','.xmlvm')
-sys.stdout=open(outPutFile,"w")
-CompileJack(prefix+fileName)
-
+prefixes = [#'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/',
+            #'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/']
+fileNames= [#'Main.jack',
+            #'Main.jack' ,
+            'Square.jack',
+            'SquareGame.jack']
+for prefix,fileName in zip(prefixes,fileNames):
+    outPutFile = 'My'+fileName.replace('.jack','.xmlvm')
+    myOut = prefix+outPutFile
+    perfectOut = prefix+fileName.replace('.jack','.xml')
+    #sys.stdout=open(myOut,"w")
+    CompileJack(prefix+fileName)
+    sys.stdout = sys.__stdout__
+    CompareFiles(myOut,perfectOut)
