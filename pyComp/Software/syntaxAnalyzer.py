@@ -1,5 +1,5 @@
-#Parses a .jack file into an xml file. this is done to assist in the compiling of a jack language
-#file into a vm file
+#reads in a .jack file and prints the corresponding syntax (in xml format) to stdout
+#this is done to assist in the compiling of a jack language
 import sys
 
 class Analyzer:
@@ -192,7 +192,6 @@ class CompileJack:
         
         peek = f.peek() #class Var Dec
         while(peek in ['static','field']):
-            print('peek: '+peek)
             self.CompileClassVarDec()
             peek = f.peek()
         
@@ -278,7 +277,8 @@ class CompileJack:
             while(peek == 'var'):
                 self.CompileVarDec()
                 peek = f.peek()
-            self.CompileStatements()
+            if(peek != '}'):
+                self.CompileStatements()
             peek = f.peek()
         token = f.advance()
         self.out(token)# '}'
@@ -306,7 +306,6 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         peek = f.peek()
-        print(peek)
         while(peek in ['let','if','while','do','return']):
             self.CompileStatement()
             peek = f.peek()
@@ -428,6 +427,7 @@ class CompileJack:
         peek = f.peek()
         while(peek!= '}'):
             self.CompileStatements()
+            peek = f.peek()
         token = f.advance()
         self.out(token)# '}'
         
@@ -475,8 +475,9 @@ class CompileJack:
             self.CompileExpression()
             token = f.advance()
             self.out(token)#)
-        elif type in ['-','~']:
+        elif token in ['-','~']:
             self.out(token)
+            self.CompileTerm()
         elif type == 'identifier':
             self.out(token)
             peek = f.peek()

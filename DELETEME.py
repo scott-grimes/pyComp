@@ -222,19 +222,17 @@ for folder in folderNames:
     vm(fn)
     sys.stdout.close()
 """
-prefixes = [#'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/',
-            #'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
+prefixes = ['pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/',
             'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/']
-fileNames= [#'Main.jack',
-            #'Main.jack' ,
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/',
+            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/']
+fileNames= ['Main.jack',
+            'Main.jack' ,
+            'Square.jack',
+            'SquareGame.jack',
+            'Main.jack' ,
             'Square.jack',
             'SquareGame.jack']
-for prefix,fileName in zip(prefixes,fileNames):
-    outPutFile = 'My'+fileName.replace('.jack','.xmlvm')
-    myOut = prefix+outPutFile
-    perfectOut = prefix+fileName.replace('.jack','.xml')
-    #sys.stdout=open(myOut,"w")
-    CompileJack(prefix+fileName)
-    sys.stdout = sys.__stdout__
-    CompareFiles(myOut,perfectOut)

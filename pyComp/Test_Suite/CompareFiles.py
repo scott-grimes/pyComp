@@ -2,15 +2,12 @@ class CompareFiles:
     
     def __init__(self,file1,file2):
         badCount = 0
-        with open(file1) as f1:
-            with open(file2) as f2:
-                file1_line = f1.readline()
-                file2_line = f2.readline()
-                if(file1_line != file2_line):
-                    badCount+=1
-                    print('ERROR',file1_line,file2_line)
-                else:
-                    pass
+        lines_1 = open(file1,'r').readlines()
+        lines_2 = open(file2,'r').readlines()
+        for line_1, line_2 in zip(lines_1, lines_2):
+            if(line_1 != line_2):
+                badCount+=1
+                #print('ERROR',line_1,line_2)
                 
         file1_trunkName = file1.split('/')[-1]
         file2_trunkName = file2.split('/')[-1]
