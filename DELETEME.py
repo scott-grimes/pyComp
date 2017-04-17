@@ -4,9 +4,8 @@ import pyComp,os,sys
 from pyComp.Test_Suite.WorkingTests import decToBin,binToDec,generalTester
 from pyComp.Hardware.Chips import *
 from pyComp.Hardware.Components import *
-from pyComp.Software.syntaxAnalyzer import *
 from pyComp.Test_Suite.CompareFiles import CompareFiles
-
+from pyComp.Software.jackCompiler import *
 class TEMPPC:
     #16 bit counter with load and reset controls
     #if reset(t) then out(t+1) = 0
@@ -222,17 +221,13 @@ for folder in folderNames:
     vm(fn)
     sys.stdout.close()
 """
-prefixes = ['pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ArrayTest/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/ExpressionlessSquare/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/',
-            'pyComp/Test_Suite/testFiles/syntaxAnalyzerFiles/Square/']
-fileNames= ['Main.jack',
-            'Main.jack' ,
-            'Square.jack',
-            'SquareGame.jack',
-            'Main.jack' ,
-            'Square.jack',
-            'SquareGame.jack']
+prefix = 'pyComp/Test_Suite/testFiles/compilerFiles/Seven/'
+            
+fileName= 'Main.jack'
+            
+
+fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
+
+#sys.stdout=open(folder[2:]+'.asm',"w")
+CompileJack(fn)
+#sys.stdout.close()

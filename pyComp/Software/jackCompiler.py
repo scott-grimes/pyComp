@@ -130,6 +130,29 @@ class Analyzer:
     
     def stringVal(self,token):
         return token[1:-1] #strips the quotes off of our token
+    
+    def symbolOperator(self,token):
+        if token == '+':
+            return 'add'
+        elif  token == '-':
+            return 'sub'
+        elif  token == '*':
+            return 'call Math.multiply 2'
+        elif  token == '/':
+            return 'call Math.divide 2'
+        elif  token == '&':
+            return 'and'
+        elif  token == '|':
+            return 'or'
+        elif  token == '<':
+            return 'lt'
+        elif  token == '>':
+            return 'gt'
+        elif  token == '=':
+            return 'eq'
+        
+        
+        return None
         
 class CompileJack:
     
@@ -179,15 +202,14 @@ class CompileJack:
         
     
     def CompileClass(self):
-        self.print_tag('<class>')
         self.indent +=1
         f = self.fetch
-        token = f.advance()
-        self.out(token) #class keyword
-        token = f.advance()
-        self.out(token) #class name
-        token = f.advance()
-        self.out(token) #{
+        class_keyword = f.advance() #encountered a class
+        
+        self.class_name = f.advance() 
+        
+        open_brace = f.advance() #opens the class
+        
         
         peek = f.peek() #class Var Dec
         while(peek in ['static','field']):
@@ -200,10 +222,9 @@ class CompileJack:
             self.CompileSubroutine()
             peek = f.peek()
             
-        token = f.advance()
-        self.out(token) #}
+        close_curl = f.advance() #ends the class
+        
         self.indent-=1
-        self.print_tag('</class>')
         
         return
     
@@ -226,50 +247,45 @@ class CompileJack:
         self.print_tag('</classVarDec>')
         
     def CompileSubroutine(self):
-        self.print_tag('<subroutineDec>')
         self.indent +=1
         f = self.fetch
-        token = f.advance() #constructor/function/method
-        self.out(token)
-        token = f.advance() #return type or void
-        self.out(token)
-        token = f.advance() #subroutineName 
-        self.out(token)
-        token = f.advance() # '('
-        self.out(token)
+        sub_type = f.advance() #constructor/function/method
         
-        self.CompileParameterList()
+        return_type = f.advance() #return type or void
         
-        token = f.advance() # ')'
-        self.out(token)
+        sub_name = f.advance() #subroutineName 
+       
+        open_parenth = f.advance() # '('
+        
+        parameter_count = self.CompileParameterList()
+        
+        close_parenth = f.advance() # ')'
+        
+        print('function '+self.class_name+'.'+sub_name+' '+str(parameter_count))
         
         self.CompileSubroutineBody()
         
         self.indent -=1
-        self.print_tag('</subroutineDec>')
         
         return
     
     def CompileParameterList(self):
         #((type varName)(','type varName)*)?
-        self.print_tag('<parameterList>')
-        
+        parameter_count = 0
         self.indent +=1
         f= self.fetch
         peek = f.peek()
         while peek != ')':
-            token = f.advance()
-            self.out(token) # ',' or type or varName
+            parameter_count+=1
+            token = f.advance()# ',' or type or varName
             peek = f.peek()
         self.indent -=1
-        self.print_tag('</parameterList>')
+        return parameter_count
             
     def CompileSubroutineBody(self):
-        self.print_tag('<subroutineBody>')
         self.indent +=1
         f = self.fetch
-        token = f.advance() # '{'
-        self.out(token)
+        open_brace = f.advance() # '{'
         
         peek = f.peek()
         while(peek != '}'):
@@ -279,26 +295,23 @@ class CompileJack:
             if(peek != '}'):
                 self.CompileStatements()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# '}'
+        close_brace = f.advance() #'}' end of our function
+        
         self.indent -=1
-        self.print_tag('</subroutineBody>')
 
     def CompileVarDec(self):
-        self.print_tag('<varDec>')
         self.indent +=1
         f = self.fetch
-        token = f.advance() 
-        self.out(token) #var
-        token = f.advance() 
-        self.out(token) #type
-        token = f.advance() 
-        self.out(token) #varName
+        var = f.advance()  
+
+        type = f.advance()  
+
+        varName = f.advance() 
+        print(var+" "+type+" "+varName+" ")
         while token != ';':
             token = f.advance() #varName or ',' or ';'
-            self.out(token)
+            print(token,end=' ')
         self.indent -=1
-        self.print_tag('</varDec>')
             
     def CompileStatements(self):
         self.print_tag('<statements>')
@@ -393,19 +406,17 @@ class CompileJack:
         self.print_tag('</whileStatement>')
         
     def CompileReturn(self):
-        self.print_tag('<returnStatement>')
         self.indent +=1
         f = self.fetch
-        token = f.advance()
-        self.out(token)# return
+        token = f.advance()# return
         peek = f.peek()
         while(peek != ';'):
             self.CompileExpression()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# ';'
+        semi_colon = f.advance()# ';' end of return statement
+        print('return')
+        
         self.indent -=1
-        self.print_tag('</returnStatement>')
         
     def CompileIf(self):
         self.print_tag('<ifStatement>')
@@ -444,8 +455,9 @@ class CompileJack:
         while peek in ['+','-','*','/','&','|',
                     '<','>','=']:
             token = f.advance()
-            self.out(token)# OP
+            operator_statement = f.symbolOperator(token)# OP
             self.CompileTerm()
+            print(operator_statement)
             peek = f.peek()
         
         self.indent -=1
@@ -462,7 +474,7 @@ class CompileJack:
         type = f.tokenType(token)
         
         if type =='integerConstant':
-            self.out(f.intVal(token))
+            print('push constant '+token)
         elif type == 'stringConstant':
             self.out(token)
         elif type =='keyword':
@@ -470,13 +482,15 @@ class CompileJack:
             
         #( expression )
         elif token == '(':
-            self.out(token)#(
+            
             self.CompileExpression()
-            token = f.advance()
-            self.out(token)#)
+            token = f.advance()#) end of parenthisis
+            
         elif token in ['-','~']:
             self.out(token)
             self.CompileTerm()
+            
+       
         elif type == 'identifier':
             self.out(token)
             peek = f.peek()
@@ -492,6 +506,7 @@ class CompileJack:
                 self.CompileExpression()
                 token = f.advance()
                 self.out(token)# ]
+            
             
             
             #variable
