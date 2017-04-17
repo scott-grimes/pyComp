@@ -158,6 +158,7 @@ class CompileJack:
     
     def __init__(self,file_with_path):
         self.fetch = Analyzer(file_with_path)
+        self.symbolTable = SymbolTable()
         self.indent = 0
         self.CompileClass()
         return
@@ -252,7 +253,10 @@ class CompileJack:
         sub_type = f.advance() #constructor/function/method
         
         return_type = f.advance() #return type or void
-        
+        if(return_type == 'void'):
+            self.voidReturn = True
+        else:
+            self.voidReturn = False
         sub_name = f.advance() #subroutineName 
        
         open_parenth = f.advance() # '('
@@ -261,7 +265,17 @@ class CompileJack:
         
         close_parenth = f.advance() # ')'
         
-        print('function '+self.class_name+'.'+sub_name+' '+str(parameter_count))
+        open_brace = f.advance() # '{' starts the body
+        
+        num_of_method_vars = 0
+        peek = f.peek()
+        while(peek == 'var'):
+                num_of_method_vars+=self.CompileVarDec()
+                peek = f.peek()
+        
+        
+        #find num of variables declared!
+        print('function '+self.class_name+'.'+sub_name+' '+str(parameter_count+num_of_method_vars))
         
         self.CompileSubroutineBody()
         
@@ -285,36 +299,38 @@ class CompileJack:
     def CompileSubroutineBody(self):
         self.indent +=1
         f = self.fetch
-        open_brace = f.advance() # '{'
-        
+        num_of_vars = 0
         peek = f.peek()
         while(peek != '}'):
-            while(peek == 'var'):
-                self.CompileVarDec()
-                peek = f.peek()
-            if(peek != '}'):
-                self.CompileStatements()
+            self.CompileStatements()
             peek = f.peek()
         close_brace = f.advance() #'}' end of our function
-        
+        print('i had '+str(num_of_vars)+ ' variables')
         self.indent -=1
 
     def CompileVarDec(self):
         self.indent +=1
         f = self.fetch
-        var = f.advance()  
-
-        type = f.advance()  
-
-        varName = f.advance() 
+        num_of_vars = 1
+        token = f.advance()  
+        var = token
+        token = f.advance()  
+        type = token
+        token = f.advance() 
+        varName = token
         print(var+" "+type+" "+varName+" ")
-        while token != ';':
-            token = f.advance() #varName or ',' or ';'
-            print(token,end=' ')
+        peek = f.peek()
+        while peek == ',':
+            token = f.advance() #','
+            varName = f.advance()#varName
+            print(varName)
+            peek = f.peek()
+            num_of_vars+=1
+        f.advance() #';' ends declaration
         self.indent -=1
+        return num_of_vars
             
     def CompileStatements(self):
-        self.print_tag('<statements>')
         self.indent +=1
         f = self.fetch
         peek = f.peek()
@@ -323,7 +339,6 @@ class CompileJack:
             peek = f.peek()
         
         self.indent -=1
-        self.print_tag('</statements>')
         
     def CompileStatement(self):
         f = self.fetch
@@ -336,19 +351,16 @@ class CompileJack:
         
         
     def CompileDo(self):
-        self.print_tag('<doStatement>')
         self.indent +=1
         f = self.fetch
-        token = f.advance()
-        self.out(token)# do
+        token = f.advance() #do command
         peek = f.peek()
         while(peek != ';'):
             self.CompileSubroutineCall()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# ';'
+        token = f.advance()# ';' end of do command
+        
         self.indent -=1
-        self.print_tag('</doStatement>')
         
     def CompileLet(self):
         self.print_tag('<letStatement>')
@@ -414,6 +426,12 @@ class CompileJack:
             self.CompileExpression()
             peek = f.peek()
         semi_colon = f.advance()# ';' end of return statement
+        if(self.voidReturn):
+            print('pop temp 0')
+            print('push constant 0')
+        
+            
+        
         print('return')
         
         self.indent -=1
@@ -445,7 +463,6 @@ class CompileJack:
         self.print_tag('</ifStatement>')
         
     def CompileExpression(self):
-        self.print_tag('<expression>')
         self.indent +=1
         #term (op term)*
         f = self.fetch
@@ -455,19 +472,17 @@ class CompileJack:
         while peek in ['+','-','*','/','&','|',
                     '<','>','=']:
             token = f.advance()
-            operator_statement = f.symbolOperator(token)# OP
+            operator_statement = f.symbolOperator(token)# operator symbol
             self.CompileTerm()
             print(operator_statement)
             peek = f.peek()
         
         self.indent -=1
-        self.print_tag('</expression>')
         
     def CompileTerm(self):
         #term (op term)*
         #if term is identifier, distinguish between
         #[ ( or .
-        self.print_tag('<term>')
         self.indent +=1
         f = self.fetch
         token = f.advance()
@@ -475,6 +490,7 @@ class CompileJack:
         
         if type =='integerConstant':
             print('push constant '+token)
+            
         elif type == 'stringConstant':
             self.out(token)
         elif type =='keyword':
@@ -487,8 +503,12 @@ class CompileJack:
             token = f.advance()#) end of parenthisis
             
         elif token in ['-','~']:
-            self.out(token)
             self.CompileTerm()
+            if token == '-':
+                print('neg')
+            if token == '~':
+                print('not')
+            
             
        
         elif type == 'identifier':
@@ -512,38 +532,44 @@ class CompileJack:
             #variable
         
         self.indent -=1
-        self.print_tag('</term>')
                 
     def CompileExpressionList(self):
-        self.print_tag('<expressionList>')
+        
         self.indent+=1
         f = self.fetch
         peek = f.peek()
+        num_of_expressions = 0
         while(peek != ')'):
+            num_of_expressions += 1
             self.CompileExpression()
             peek = f.peek()
             if(peek == ','):
-                token = f.advance()
-                self.out(token)#','
+                token = f.advance()# ',' seperates another expression
                 peek = f.peek()
                 
         
         self.indent-=1
-        self.print_tag('</expressionList>')
+        return str(num_of_expressions)
     
     def CompileSubroutineCall(self):
         f = self.fetch
         token = f.advance()
+        subroutine_name = token
         while(token!= '('):
-            self.out(token)
             token = f.advance()
-        self.out(token)# (
+            if(token!='('):
+                subroutine_name += token
         
-        self.CompileExpressionList()
-        token = f.advance()
-        self.out(token)#')'
+        num_subroutine_arguments = self.CompileExpressionList()
+        token = f.advance() #')' end of subroutine call's arguments
+        print('call '+subroutine_name+' '+num_subroutine_arguments)
         return
         
+class SymbolTable:
+    def __init__(self):
+        pass
+    
+    
     
 if __name__ == "__main__":
     try:

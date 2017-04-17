@@ -201,27 +201,8 @@ def testCPU():
                 myAnswers.append(myanswers)
     generalTester(desiredAnswers,myAnswers)
         
-"""
-vm_names = ['BasicTest','PointerTest','SimpleAdd','StackTest','StaticTest']
-for VMNAME in vm_names:
-    pre = 'pyComp/Test_Suite/testFiles/vmFiles/'
-    fn = os.path.join(os.path.dirname(__file__), pre+VMNAME+'.vm')
-    
-    sys.stdout=open(VMNAME+'.asm',"w")
-    vm(fn,VMNAME)
-    sys.stdout.close()
-"""
-"""
-folderNames = ['1_BasicLoop','2_FibonacciSeries','3_SimpleFunction','4_FibonacciElement','5_StaticsTest']
-prefix = 'pyComp/Test_Suite/testFiles/advancedVMFiles/'
-for folder in folderNames:
-    fn = os.path.join(os.path.dirname(__file__), prefix+folder)
-    
-    sys.stdout=open(folder[2:]+'.asm',"w")
-    vm(fn)
-    sys.stdout.close()
-"""
-prefix = 'pyComp/Test_Suite/testFiles/compilerFiles/Seven/'
+
+prefix = 'pyComp/Test_Suite/testFiles/compilerFiles/ConvertToBin/'
             
 fileName= 'Main.jack'
             
