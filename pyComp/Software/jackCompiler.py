@@ -205,11 +205,11 @@ class CompileJack:
     def CompileClass(self):
         self.indent +=1
         f = self.fetch
-        class_keyword = f.advance() #encountered a class
+        f.advance() #encountered a class "class"
         
         self.class_name = f.advance() 
         
-        open_brace = f.advance() #opens the class
+        f.advance() #opens the class '{'
         
         
         peek = f.peek() #class Var Dec
@@ -223,7 +223,7 @@ class CompileJack:
             self.CompileSubroutine()
             peek = f.peek()
             
-        close_curl = f.advance() #ends the class
+        f.advance() #ends the class '}'
         
         self.indent-=1
         
@@ -231,6 +231,7 @@ class CompileJack:
     
     def CompileClassVarDec(self):
         self.print_tag('<classVarDec>')
+        #KIND IS FIELD
         self.indent +=1
         f = self.fetch
         token = f.advance() #type
@@ -248,6 +249,7 @@ class CompileJack:
         self.print_tag('</classVarDec>')
         
     def CompileSubroutine(self):
+        print('complingsubroutine')
         self.indent +=1
         f = self.fetch
         sub_type = f.advance() #constructor/function/method
@@ -259,13 +261,13 @@ class CompileJack:
             self.voidReturn = False
         sub_name = f.advance() #subroutineName 
        
-        open_parenth = f.advance() # '('
+        f.advance() # '('
         
         parameter_count = self.CompileParameterList()
         
-        close_parenth = f.advance() # ')'
+        f.advance() # ')'
         
-        open_brace = f.advance() # '{' starts the body
+        f.advance() # '{' starts the body of the subroutine
         
         num_of_method_vars = 0
         peek = f.peek()
@@ -273,9 +275,9 @@ class CompileJack:
                 num_of_method_vars+=self.CompileVarDec()
                 peek = f.peek()
         
-        
+        functionName = self.class_name+'.'+sub_name
         #find num of variables declared!
-        print('function '+self.class_name+'.'+sub_name+' '+str(parameter_count+num_of_method_vars))
+        VMWriter.writeFunction(functionName,num_of_method_vars)
         
         self.CompileSubroutineBody()
         
@@ -331,7 +333,6 @@ class CompileJack:
             peek = f.peek()
             num_of_vars+=1
         f.advance() #';' ends declaration
-        print(self.symbol.subroutineTable)
         self.indent -=1
         return num_of_vars
             
@@ -368,32 +369,37 @@ class CompileJack:
         self.indent -=1
         
     def CompileLet(self):
-        self.print_tag('<letStatement>')
+       
         self.indent +=1
         f = self.fetch
-        token = f.advance()
-        self.out(token)# let
-        token = f.advance()
-        self.out(token)# varName
+        f.advance()# let keyword
+        varName = f.advance()
+        
         peek = f.peek()
         if(peek == '['):
-            token = f.advance()
-            self.out(token)#'['
+            f.advance() #'[' array open bracket
             peek = f.peek()
             if(peek !=']'):
                 self.CompileExpression()
-            token = f.advance()
-            self.out(token)#']'
+            f.advance()#']' array close bracket
+            
         
-        token = f.advance()
-        self.out(token)# '=' 
-        
+        f.advance()# '=' 
         self.CompileExpression()
         
-        token = f.advance()
-        self.out(token)# ';'
+        f.advance()# ';'
+        var_symbol_num = self.symbol.indexOf(varName)
+        kind = self.symbol.kindOf(varName)
+        if kind == 'static':
+            kind = 'static'
+        elif kind == 'argument':
+            kind = 'argument'
+        elif kind == 'var':
+            kind = 'local'
+        elif kind == 'field':
+            kind = 'field'#DOH
+        VMWriter.push(kind,var_symbol_num)
         self.indent -=1
-        self.print_tag('</letStatement>')
         
     def CompileWhile(self):
         self.print_tag('<whileStatement>')
@@ -425,12 +431,12 @@ class CompileJack:
     def CompileReturn(self):
         self.indent +=1
         f = self.fetch
-        token = f.advance()# return
+        f.advance()# return keyword seen
         peek = f.peek()
         while(peek != ';'):
             self.CompileExpression()
             peek = f.peek()
-        semi_colon = f.advance()# ';' end of return statement
+        f.advance()# ';' end of return statement
         if(self.voidReturn):
             print('pop temp 0')
             print('push constant 0')
@@ -468,6 +474,7 @@ class CompileJack:
         self.print_tag('</ifStatement>')
         
     def CompileExpression(self):
+       
         self.indent +=1
         #term (op term)*
         f = self.fetch
@@ -492,9 +499,8 @@ class CompileJack:
         f = self.fetch
         token = f.advance()
         type = f.tokenType(token)
-        
         if type =='integerConstant':
-            print('push constant '+token)
+            VMWriter.push('constant',token)
             
         elif type == 'stringConstant':
             self.out(token)
@@ -517,12 +523,11 @@ class CompileJack:
             
        
         elif type == 'identifier':
-            self.out(token)
             peek = f.peek()
            
            #subroutine call
             if peek =='.':
-                self.CompileSubroutineCall()
+                self.CompileSubroutineCall(token)
                 
             #varName [ expression ]
             elif peek == '[':
@@ -535,6 +540,8 @@ class CompileJack:
             
             
             #variable
+            else:
+                self.out(token)
         
         self.indent -=1
                 
@@ -556,10 +563,13 @@ class CompileJack:
         self.indent-=1
         return str(num_of_expressions)
     
-    def CompileSubroutineCall(self):
+    def CompileSubroutineCall(self,className = ''):
         f = self.fetch
-        token = f.advance()
-        subroutine_name = token
+        token = f.advance() #could be a '.' or (
+        if className != '':
+            subroutine_name = className+'.'
+        else:
+            subroutine_name = token
         while(token!= '('):
             token = f.advance()
             if(token!='('):
@@ -567,7 +577,7 @@ class CompileJack:
         
         num_subroutine_arguments = self.CompileExpressionList()
         token = f.advance() #')' end of subroutine call's arguments
-        print('call '+subroutine_name+' '+num_subroutine_arguments)
+        VMWriter.writeCall(subroutine_name, num_subroutine_arguments)
         return
     
 class Symbol:
@@ -612,7 +622,7 @@ class SymbolTable:
         if table != None:
             names = [i.name for i in table]
             if name in names:
-                return table[table.index(name)].kind
+                return table[names.index(name)].kind
         return None
         
         
@@ -622,7 +632,7 @@ class SymbolTable:
         if table != None:
             names = [i.type for i in table]
             if name in names:
-                return table[table.index(name)].type
+                return table[names.index(name)].type
         return None
     
     def getTableOf(self,name):
@@ -643,12 +653,31 @@ class SymbolTable:
         if table != None:
             names = [i.name for i in table]
             if name in names:
-                return table.index(name)
+                return names.index(name)
         return None
     
 class VMWriter:
-   def __init__(self):
-       pass
+    def __init__(self):
+        pass
+    @staticmethod
+    def push(segment,index):
+        print('push '+segment+' '+str(index))
+        
+    @staticmethod
+    def pop(segment,index):
+        print('pop '+segment+' '+str(index))
+    @staticmethod
+    def writeLabel(label):
+        print('('+label+')')
+    @staticmethod
+    def writeCall(name,nArgs):
+        print('call '+name+' '+str(nArgs))
+        
+    @staticmethod
+    def writeFunction(name,nLocals):
+        print('function '+name+' '+str(nLocals))
+        
+    
     
     
 if __name__ == "__main__":
