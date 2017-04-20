@@ -6,6 +6,7 @@ from pyComp.Hardware.Chips import *
 from pyComp.Hardware.Components import *
 from pyComp.Test_Suite.CompareFiles import CompareFiles
 from pyComp.Software.jackCompiler import *
+#from pyComp.Software.syntaxanalyzieWITHSYMBOLS import *
 class TEMPPC:
     #16 bit counter with load and reset controls
     #if reset(t) then out(t+1) = 0
@@ -208,6 +209,7 @@ fileName= 'Main.jack'
             
 
 fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
+
 
 #sys.stdout=open(folder[2:]+'.asm',"w")
 CompileJack(fn)

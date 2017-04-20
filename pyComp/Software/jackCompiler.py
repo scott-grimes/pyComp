@@ -249,9 +249,11 @@ class CompileJack:
         self.print_tag('</classVarDec>')
         
     def CompileSubroutine(self):
-        print('complingsubroutine')
+        #print('complingsubroutine')
         self.indent +=1
         f = self.fetch
+        
+        self.symbol.startSubroutine()
         sub_type = f.advance() #constructor/function/method
         
         return_type = f.advance() #return type or void
@@ -388,17 +390,11 @@ class CompileJack:
         self.CompileExpression()
         
         f.advance()# ';'
+        #print('storing let into: ',varName)
         var_symbol_num = self.symbol.indexOf(varName)
         kind = self.symbol.kindOf(varName)
-        if kind == 'static':
-            kind = 'static'
-        elif kind == 'argument':
-            kind = 'argument'
-        elif kind == 'var':
-            kind = 'local'
-        elif kind == 'field':
-            kind = 'field'#DOH
-        VMWriter.push(kind,var_symbol_num)
+        
+        VMWriter.pop(kind,var_symbol_num)
         self.indent -=1
         
     def CompileWhile(self):
@@ -445,6 +441,7 @@ class CompileJack:
         
         print('return')
         
+        
         self.indent -=1
         
     def CompileIf(self):
@@ -469,6 +466,17 @@ class CompileJack:
             peek = f.peek()
         token = f.advance()
         self.out(token)# '}'
+        
+        peek = f.peek()
+        if peek == 'else':
+            self.out(f.advance())#'else'
+            token = f.advance()
+            self.out(token)# '{'
+            while(peek!= '}'):
+                self.CompileStatements()
+                peek = f.peek()
+            token = f.advance()
+            self.out(token)# '}'
         
         self.indent -=1
         self.print_tag('</ifStatement>')
@@ -541,7 +549,10 @@ class CompileJack:
             
             #variable
             else:
-                self.out(token)
+                varName = token
+                var_symbol_num = self.symbol.indexOf(varName)
+                kind = self.symbol.kindOf(varName)
+                VMWriter.push(kind, var_symbol_num)
         
         self.indent -=1
                 
@@ -590,6 +601,12 @@ class Symbol:
         return '['+self.name+','+self.type+','+self.kind+']'
         
 class SymbolTable:
+    #subroutine variables are accessed by *local
+    #subroutine argument variables are accessed by *argument
+    #static class variables are accessed by *static
+    #access to class fields in a subroutine are found by pointing to 
+    #the "this" segment, then accessing the field via this index reference
+    
     def __init__(self):
         self.classTable = []
         self.subroutineTable = []
@@ -622,8 +639,17 @@ class SymbolTable:
         if table != None:
             names = [i.name for i in table]
             if name in names:
-                return table[names.index(name)].kind
-        return None
+                kind =  table[names.index(name)].kind
+        if kind == 'static':
+            return 'static'
+        elif kind == 'arg':
+            return 'argument'
+        elif kind == 'var':
+            return 'local'
+        elif kind == 'field':
+            return  'field'#DOH NNEDS POINTER!
+        else:
+            return None
         
         
     def typeOf(self,name):
@@ -655,7 +681,9 @@ class SymbolTable:
             if name in names:
                 return names.index(name)
         return None
-    
+    def printTables(self):    
+        print('classTable',self.classTable)
+        print('subroutineTable',self.subroutineTable)
 class VMWriter:
     def __init__(self):
         pass
@@ -671,11 +699,14 @@ class VMWriter:
         print('('+label+')')
     @staticmethod
     def writeCall(name,nArgs):
+        
         print('call '+name+' '+str(nArgs))
         
     @staticmethod
     def writeFunction(name,nLocals):
         print('function '+name+' '+str(nLocals))
+    
+    
         
     
     

@@ -136,6 +136,7 @@ class CompileJack:
     
     def __init__(self,file_with_path):
         self.fetch = Analyzer(file_with_path)
+        self.symbol = SymbolTable()
         self.indent = 0
         self.CompileClass()
         return
@@ -210,6 +211,7 @@ class CompileJack:
     
     def CompileClassVarDec(self):
         self.print_tag('<classVarDec>')
+        self.symbolType = 'classVariable'
         self.indent +=1
         f = self.fetch
         token = f.advance() #type
@@ -250,20 +252,28 @@ class CompileJack:
         self.print_tag('</subroutineDec>')
         
         return
-    
     def CompileParameterList(self):
         #((type varName)(','type varName)*)?
+        parameter_count = 0
         self.print_tag('<parameterList>')
-        
         self.indent +=1
         f= self.fetch
         peek = f.peek()
         while peek != ')':
-            token = f.advance()
-            self.out(token) # ',' or type or varName
+            parameter_count+=1
+            type = f.advance()# type or varName
+            self.out(type)
+            varName = f.advance()
+            self.out(varName)
+            self.symbol.define(varName,type,'arg')
             peek = f.peek()
+            if peek == ',':
+                f.advance()
+                self.out(',')
         self.indent -=1
         self.print_tag('</parameterList>')
+        return parameter_count
+    
             
     def CompileSubroutineBody(self):
         self.print_tag('<subroutineBody>')
@@ -289,17 +299,31 @@ class CompileJack:
         self.print_tag('<varDec>')
         self.indent +=1
         f = self.fetch
+        num_of_vars = 1
+        token = f.advance()  
+        self.out(token)
+        var = token
+        token = f.advance()  
+        self.out(token)
+        type = token
         token = f.advance() 
-        self.out(token) #var
-        token = f.advance() 
-        self.out(token) #type
-        token = f.advance() 
-        self.out(token) #varName
-        while token != ';':
-            token = f.advance() #varName or ',' or ';'
+        self.out(token)
+        varName = token
+        self.symbol.define(varName,type,'var')
+        peek = f.peek()
+        while peek == ',':
+            token = f.advance() #','
             self.out(token)
+            varName = f.advance()#varName
+            self.out(varName)
+            self.symbol.define(varName,type,'var')
+            peek = f.peek()
+            num_of_vars+=1
+        f.advance() #';' ends declaration
+        self.out(';')
         self.indent -=1
         self.print_tag('</varDec>')
+        return num_of_vars
             
     def CompileStatements(self):
         self.print_tag('<statements>')
@@ -316,6 +340,7 @@ class CompileJack:
     def CompileStatement(self):
         f = self.fetch
         peek = f.peek()
+        self.symbolType = 'local'
         if peek == 'let': self.CompileLet()
         if peek == 'if': self.CompileIf()
         if peek == 'while': self.CompileWhile()
@@ -326,6 +351,7 @@ class CompileJack:
     def CompileDo(self):
         self.print_tag('<doStatement>')
         self.indent +=1
+        num_of_vars = 1
         f = self.fetch
         token = f.advance()
         self.out(token)# do
@@ -500,6 +526,7 @@ class CompileJack:
                 
             #varName [ expression ]
             elif peek == '[':
+                
                 token = f.advance()
                 self.out(token) #[
                 self.CompileExpression()
@@ -508,7 +535,8 @@ class CompileJack:
             
             
             #variable
-        
+            else:
+                pass
         self.indent -=1
         self.print_tag('</term>')
                 
@@ -541,7 +569,90 @@ class CompileJack:
         token = f.advance()
         self.out(token)#')'
         return
+
+class Symbol:
+    def __init__(self,name,type,kind):
+        self.name = name
+        self.type = type
+        self.kind = kind
         
+    def __repr__(self):
+        return '['+self.name+','+self.type+','+self.kind+']'
+        
+class SymbolTable:
+    #subroutine variables are accessed by *local
+    #subroutine argument variables are accessed by *argument
+    #static class variables are accessed by *static
+    #access to class fields in a subroutine are found by pointing to 
+    #the "this" segment, then accessing the field via this index reference
+    
+    def __init__(self):
+        self.classTable = []
+        self.subroutineTable = []
+    
+    def startSubroutine(self):
+        self.subroutineTable = []
+    
+    def define(self,name,type,kind):
+        newSymbol = Symbol(name,type,kind)
+        
+        if kind in ['arg','var']:
+            self.subroutineTable.append(newSymbol)
+        if kind in ['static','field']:
+            self.classTable.append(newSymbol)
+        print(name,type,kind)
+        
+    def varCount(self,kind):
+        num = 0
+        if kind in ['arg','var']:
+            table = self.subroutineTable
+        if kind in ['static','field']:
+            table = self.classTable
+        for i in table:
+            if i.kind == kind:
+                num+=1
+        return num
+            
+            
+    def kindOf(self,name):
+        #what kind of variable is name
+        table = self.getTableOf(name)
+        if table != None:
+            names = [i.name for i in table]
+            if name in names:
+                return table[names.index(name)].kind
+        return None
+        
+        
+    def typeOf(self,name):
+       #what type of variable is name
+        table = self.getTableOf(name)
+        if table != None:
+            names = [i.type for i in table]
+            if name in names:
+                return table[names.index(name)].type
+        return None
+    
+    def getTableOf(self,name):
+        #returns the table which contains our variable
+        #is our name in the subroutine
+        names = [i.name for i in self.subroutineTable]
+        if name in names:
+            return self.subroutineTable
+        
+        #is our name a class var?
+        names = [i.name for i in self.classTable]
+        if name in names:
+            return self.classTable
+    
+    def indexOf(self,name):
+        #what is the index of name
+        table = self.getTableOf(name)
+        if table != None:
+            names = [i.name for i in table]
+            if name in names:
+                return names.index(name)
+        return None
     
     
     
