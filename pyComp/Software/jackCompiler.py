@@ -255,6 +255,8 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         
+        self.whileCount = -1
+        self.ifCount = -1
         self.symbol.startSubroutine()
         sub_type = f.advance() #constructor/function/method
         
@@ -278,7 +280,6 @@ class CompileJack:
         while(peek == 'var'):
                 num_of_method_vars+=self.CompileVarDec()
                 peek = f.peek()
-        self.symbol.printTables()
         functionName = self.class_name+'.'+sub_name
         #find num of variables declared!
         VMWriter.writeFunction(functionName,num_of_method_vars)
@@ -479,8 +480,9 @@ class CompileJack:
             self.CompileExpression()
             peek = f.peek()
         f.advance()#')'
-        print('not')
         print('if-goto IF_TRUE'+ifCount)
+        print('goto IF_FALSE'+ifCount)
+        print('label IF_TRUE'+ifCount)
         f.advance()# '{'
         
         peek = f.peek()
@@ -489,11 +491,11 @@ class CompileJack:
             peek = f.peek()
         f.advance()# '}'
         self.ifCount+=1
-        print('goto IF_FALSE'+ifCount)
         
         peek = f.peek()
-        print('label IF_TRUE'+ifCount)
         if peek == 'else':
+            print('goto IF_END'+ifCount)
+            print('label IF_FALSE'+ifCount)
             f.advance()#'else'
             f.advance()# '{'
             while(peek!= '}'):
@@ -501,8 +503,9 @@ class CompileJack:
                 peek = f.peek()
             f.advance()# '}'
             
-        print('label IF_FALSE'+ifCount)
-        self.ifCount+=1
+            print('label IF_END'+ifCount)
+        else:
+            print('label IF_FALSE'+ifCount)
         self.indent -=1
         
     def CompileExpression(self):
@@ -713,10 +716,14 @@ class VMWriter:
         pass
     @staticmethod
     def push(segment,index):
+        if segment == 'arg':
+            segment = 'argument'
         print('push '+segment+' '+str(index))
         
     @staticmethod
     def pop(segment,index):
+        if segment == 'arg':
+            segment = 'argument'
         print('pop '+segment+' '+str(index))
     @staticmethod
     def writeLabel(label):

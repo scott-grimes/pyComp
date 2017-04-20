@@ -201,12 +201,23 @@ def testCPU():
                 desiredAnswers.append(correctanswers)
                 myAnswers.append(myanswers)
     generalTester(desiredAnswers,myAnswers)
-        
+"""
+#testing 7
+prefix = 'pyComp/Test_Suite/testFiles/compilerFiles/Seven/'
+fileName= 'Main.jack'
+fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
+outFile = os.path.join(os.path.dirname(__file__),'deleteme.vm')
+compareFile = os.path.join(os.path.dirname(__file__),prefix+fileName.replace('.jack','.vm'))
+sys.stdout =open(outFile,"w")
+CompileJack(fn)
+sys.stdout = sys.__stdout__
+CompareFiles(compareFile,outFile)
+os.remove(outFile)
+print()
+"""
 
 prefix = 'pyComp/Test_Suite/testFiles/compilerFiles/ConvertToBin/'
-            
 fileName= 'Main.jack'
-            
 
 fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
 
