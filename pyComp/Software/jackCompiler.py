@@ -367,7 +367,7 @@ class CompileJack:
             self.CompileSubroutineCall()
             peek = f.peek()
         token = f.advance()# ';' end of do command
-        
+        VMWriter.pop('temp',0) #all do commands pop and ignore local 0
         self.indent -=1
         
     def CompileLet(self):
@@ -434,7 +434,6 @@ class CompileJack:
             peek = f.peek()
         f.advance()# ';' end of return statement
         if(self.voidReturn):
-            print('pop temp 0')
             print('push constant 0')
         
             
