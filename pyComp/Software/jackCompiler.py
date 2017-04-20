@@ -160,6 +160,8 @@ class CompileJack:
         self.fetch = Analyzer(file_with_path)
         self.symbol = SymbolTable()
         self.indent = 0
+        self.whileCount = -1
+        self.ifCount = -1
         self.CompileClass()
         return
     
@@ -276,7 +278,7 @@ class CompileJack:
         while(peek == 'var'):
                 num_of_method_vars+=self.CompileVarDec()
                 peek = f.peek()
-        
+        self.symbol.printTables()
         functionName = self.class_name+'.'+sub_name
         #find num of variables declared!
         VMWriter.writeFunction(functionName,num_of_method_vars)
@@ -390,7 +392,6 @@ class CompileJack:
         self.CompileExpression()
         
         f.advance()# ';'
-        #print('storing let into: ',varName)
         var_symbol_num = self.symbol.indexOf(varName)
         kind = self.symbol.kindOf(varName)
         
@@ -398,36 +399,46 @@ class CompileJack:
         self.indent -=1
         
     def CompileWhile(self):
-        self.print_tag('<whileStatement>')
+        #while(cond){ stuff}
+        #
+        #Label1
+        # ~(cond)
+        #if-goto Label2
+        #stuff
+        #goto Label1
+        #Label2
         self.indent +=1
+        self.whileCount+=1
+        wCount = str(self.whileCount)
+        VMWriter.writeLabel('WHILE_EXP'+wCount)
         
         f = self.fetch
-        
-        token = f.advance()
-        self.out(token)# while
-        token = f.advance()
-        self.out(token)#'('
+        f.advance() #while
+        token = f.advance()#'('
         peek = f.peek()
         while(peek != ')'):
             self.CompileExpression()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# ')'
-        token = f.advance()
-        self.out(token)# '{'
+        f.advance()# ')'
+        print('not')
+        
+        print('if-goto '+'WHILE_END'+wCount)
+       
+        f.advance()# '{'
         peek = f.peek()
         while(peek !='}'):
             self.CompileStatements()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# '}'
+        f.advance()# '}'
+        print('goto '+'WHILE_EXP'+wCount)
+        VMWriter.writeLabel('WHILE_END'+wCount)
+        
         self.indent -=1
-        self.print_tag('</whileStatement>')
         
     def CompileReturn(self):
         self.indent +=1
         f = self.fetch
-        f.advance()# return keyword seen
+        f.advance()# 'return'
         peek = f.peek()
         while(peek != ';'):
             self.CompileExpression()
@@ -444,41 +455,55 @@ class CompileJack:
         self.indent -=1
         
     def CompileIf(self):
-        self.print_tag('<ifStatement>')
+        #if(cond)
+        #s1
+        #else
+        #s2
+        #
+        #~(cond)
+        #if-goto Label1
+        #s1
+        #goto Label2
+        #Label1
+        #s2
+        #Label2
         self.indent +=1
         f = self.fetch
-        token = f.advance()
-        self.out(token)# if
-        token = f.advance()
-        self.out(token) #'('
+        f.advance()#'if
+        f.advance()#'('
         peek = f.peek()
+        self.ifCount+=1
+        ifCount = str(self.ifCount)
+        
         while(peek != ')'):
             self.CompileExpression()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# ')'
-        token = f.advance()
-        self.out(token)# '{'
+        f.advance()#')'
+        print('not')
+        print('if-goto IF_TRUE'+ifCount)
+        f.advance()# '{'
+        
         peek = f.peek()
         while(peek!= '}'):
             self.CompileStatements()
             peek = f.peek()
-        token = f.advance()
-        self.out(token)# '}'
+        f.advance()# '}'
+        self.ifCount+=1
+        print('goto IF_FALSE'+ifCount)
         
         peek = f.peek()
+        print('label IF_TRUE'+ifCount)
         if peek == 'else':
-            self.out(f.advance())#'else'
-            token = f.advance()
-            self.out(token)# '{'
+            f.advance()#'else'
+            f.advance()# '{'
             while(peek!= '}'):
                 self.CompileStatements()
                 peek = f.peek()
-            token = f.advance()
-            self.out(token)# '}'
-        
+            f.advance()# '}'
+            
+        print('label IF_FALSE'+ifCount)
+        self.ifCount+=1
         self.indent -=1
-        self.print_tag('</ifStatement>')
         
     def CompileExpression(self):
        
@@ -512,7 +537,7 @@ class CompileJack:
         elif type == 'stringConstant':
             self.out(token)
         elif type =='keyword':
-            self.out(token)
+            VMWriter.writeKeyword(token)
             
         #( expression )
         elif token == '(':
@@ -594,7 +619,12 @@ class Symbol:
     def __init__(self,name,type,kind):
         self.name = name
         self.type = type
-        self.kind = kind
+        if kind == 'var':
+            self.kind = 'local'
+        elif kind == 'field':
+            self.kind='field'
+        else:
+            self.kind = kind
         
     def __repr__(self):
         return '['+self.name+','+self.type+','+self.kind+']'
@@ -614,6 +644,7 @@ class SymbolTable:
         self.subroutineTable = []
     
     def define(self,name,type,kind):
+        
         newSymbol = Symbol(name,type,kind)
         if kind in ['arg','var']:
             self.subroutineTable.append(newSymbol)
@@ -639,23 +670,15 @@ class SymbolTable:
             names = [i.name for i in table]
             if name in names:
                 kind =  table[names.index(name)].kind
-        if kind == 'static':
-            return 'static'
-        elif kind == 'arg':
-            return 'argument'
-        elif kind == 'var':
-            return 'local'
-        elif kind == 'field':
-            return  'field'#DOH NNEDS POINTER!
-        else:
-            return None
+                return kind
+        return None
         
         
     def typeOf(self,name):
        #what type of variable is name
         table = self.getTableOf(name)
         if table != None:
-            names = [i.type for i in table]
+            names = [i.name for i in table]
             if name in names:
                 return table[names.index(name)].type
         return None
@@ -676,9 +699,11 @@ class SymbolTable:
         #what is the index of name
         table = self.getTableOf(name)
         if table != None:
-            names = [i.name for i in table]
+            nameKind = self.kindOf(name)
+            names = [i.name for i in table if i.kind == nameKind]
             if name in names:
                 return names.index(name)
+
         return None
     def printTables(self):    
         print('classTable',self.classTable)
@@ -695,7 +720,7 @@ class VMWriter:
         print('pop '+segment+' '+str(index))
     @staticmethod
     def writeLabel(label):
-        print('('+label+')')
+        print('label '+label)
     @staticmethod
     def writeCall(name,nArgs):
         
@@ -705,8 +730,17 @@ class VMWriter:
     def writeFunction(name,nLocals):
         print('function '+name+' '+str(nLocals))
     
-    
-        
+    @staticmethod
+    def writeKeyword(keyword):
+        if keyword == 'true':
+            print('push constant 0')
+            print('not')
+        elif keyword=='false' or keyword == 'null':
+            print('push constant 0')
+        elif keyword =='this':
+            pass
+        else:
+            print(keyword)
     
     
     
