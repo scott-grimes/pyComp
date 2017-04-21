@@ -215,15 +215,19 @@ class CompileJack:
         
         
         peek = f.peek() #class Var Dec
+        classVars = 0
         while(peek in ['static','field']):
-            self.CompileClassVarDec()
+            classVars+=self.CompileClassVarDec()
             peek = f.peek()
+        
         
         #class subroutine Dec
         while(peek in ['constructor','function',
                     'method','void']):
-            self.CompileSubroutine()
+            self.CompileSubroutine(classVars)
             peek = f.peek()
+            
+         
             
         f.advance() #ends the class '}'
         
@@ -232,26 +236,27 @@ class CompileJack:
         return
     
     def CompileClassVarDec(self):
-        self.print_tag('<classVarDec>')
+        #self.print_tag('<classVarDec>')
         #KIND IS FIELD
         self.indent +=1
         f = self.fetch
-        token = f.advance() #type
-        self.out(token)
-        token = f.advance() #varName
-        self.out(token)
-        token = f.advance() #varName or ','
-        self.out(token)
-        while token != ';':
-            token = f.advance() #varName or ',' or ';'
-            self.out(token)
+        num_of_vars = 1
+        f_or_s = f.advance()   #field or static
+        type = f.advance()  
+        varName = f.advance() 
+        self.symbol.define(varName,type,f_or_s)
+        peek = f.peek()
+        while peek == ',':
+            f.advance() #','
+            varName = f.advance()#varName
+            self.symbol.define(varName,type,f_or_s)
+            peek = f.peek()
+            num_of_vars+=1
+            
+        f.advance()#';'
+        return num_of_vars
         
-        
-        self.indent -=1
-        self.print_tag('</classVarDec>')
-        
-    def CompileSubroutine(self):
-        #print('complingsubroutine')
+    def CompileSubroutine(self,classVariables = 0):
         self.indent +=1
         f = self.fetch
         
@@ -259,6 +264,9 @@ class CompileJack:
         self.ifCount = -1
         self.symbol.startSubroutine()
         sub_type = f.advance() #constructor/function/method
+        
+        
+        
         
         return_type = f.advance() #return type or void
         if(return_type == 'void'):
@@ -283,6 +291,16 @@ class CompileJack:
         functionName = self.class_name+'.'+sub_name
         #find num of variables declared!
         VMWriter.writeFunction(functionName,num_of_method_vars)
+        
+        
+        
+        if sub_type == 'constructor':
+            print ('push constant '+str(classVariables))
+            print('call Memory.alloc 1')
+            print('pop pointer 0')
+        if sub_type == 'method':
+            print('push argument '+str(0))
+            print('pop pointer 0')
         
         self.CompileSubroutineBody()
         
@@ -323,18 +341,22 @@ class CompileJack:
         self.indent +=1
         f = self.fetch
         num_of_vars = 1
-        token = f.advance()  
-        var = token
-        token = f.advance()  
-        type = token
-        token = f.advance() 
-        varName = token
+        var = f.advance()  
+        type = f.advance()  
+        varName = f.advance() 
         self.symbol.define(varName,type,'var')
         peek = f.peek()
         while peek == ',':
             token = f.advance() #','
             varName = f.advance()#varName
             self.symbol.define(varName,type,'var')
+            
+            #is the var type not built-in? allocate a new object!
+            if varName not in ['int','char','boolean']:
+                pass
+                
+                
+            
             peek = f.peek()
             num_of_vars+=1
         f.advance() #';' ends declaration
@@ -444,9 +466,11 @@ class CompileJack:
         while(peek != ';'):
             self.CompileExpression()
             peek = f.peek()
+           
         f.advance()# ';' end of return statement
         if(self.voidReturn):
             print('push constant 0')
+        
         
             
         
@@ -490,7 +514,7 @@ class CompileJack:
             self.CompileStatements()
             peek = f.peek()
         f.advance()# '}'
-        self.ifCount+=1
+        
         
         peek = f.peek()
         if peek == 'else':
@@ -599,15 +623,19 @@ class CompileJack:
                 
         
         self.indent-=1
-        return str(num_of_expressions)
+        return num_of_expressions
     
     def CompileSubroutineCall(self,className = ''):
+        
         f = self.fetch
         token = f.advance() #could be a '.' or (
+        
         if className != '':
             subroutine_name = className+'.'
         else:
             subroutine_name = token
+            className = token
+            
         while(token!= '('):
             token = f.advance()
             if(token!='('):
@@ -615,6 +643,31 @@ class CompileJack:
         
         num_subroutine_arguments = self.CompileExpressionList()
         token = f.advance() #')' end of subroutine call's arguments
+        
+        
+        
+
+        #self.symbol.printTables()
+        
+        #if we are calling a method in another object, push the first arg to be
+        #a reference to the base of that object. write a call to the class's subroutine
+        #if we are calling a method in this object, push our pointer to this object, then
+        #write a call to the class method
+        if self.symbol.getTableOf(className) != None:
+            index = self.symbol.indexOf(className)
+            kind = self.symbol.kindOf(className)
+            type = self.symbol.typeOf(className)
+            subroutine_name = type+'.'+subroutine_name.split('.',1)[1]
+            VMWriter.push(kind,index)
+            num_subroutine_arguments+=1
+        
+        if '.' not in subroutine_name:
+            #we have a call to this object's method. 
+            subroutine_name = self.class_name+'.'+subroutine_name
+            print('push pointer 0')
+            num_subroutine_arguments+=1
+            
+        
         VMWriter.writeCall(subroutine_name, num_subroutine_arguments)
         return
     
@@ -718,12 +771,16 @@ class VMWriter:
     def push(segment,index):
         if segment == 'arg':
             segment = 'argument'
+        if segment == 'field':
+            segment = 'this'
         print('push '+segment+' '+str(index))
         
     @staticmethod
     def pop(segment,index):
         if segment == 'arg':
             segment = 'argument'
+        if segment == 'field':
+            segment = 'this'
         print('pop '+segment+' '+str(index))
     @staticmethod
     def writeLabel(label):
@@ -745,7 +802,7 @@ class VMWriter:
         elif keyword=='false' or keyword == 'null':
             print('push constant 0')
         elif keyword =='this':
-            pass
+            print('push pointer 0')
         else:
             print(keyword)
     
