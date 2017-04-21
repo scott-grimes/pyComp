@@ -1,5 +1,6 @@
 #reads in a .jack file, compiles it into a .vm file, prints the results to stdout
 import sys
+from _operator import add
 
 class Analyzer:
     
@@ -216,10 +217,10 @@ class CompileJack:
         
         peek = f.peek() #class Var Dec
         classVars = 0
+        self.staticVarCount = 0
         while(peek in ['static','field']):
             classVars+=self.CompileClassVarDec()
             peek = f.peek()
-        
         
         #class subroutine Dec
         while(peek in ['constructor','function',
@@ -299,7 +300,10 @@ class CompileJack:
             print('call Memory.alloc 1')
             print('pop pointer 0')
         if sub_type == 'method':
-            print('push argument '+str(0))
+            if(classVariables==0):
+                print('push argument '+str(1))
+            else:
+                print('push argument '+str(0))
             print('pop pointer 0')
         
         self.CompileSubroutineBody()
@@ -403,12 +407,17 @@ class CompileJack:
         varName = f.advance()
         
         peek = f.peek()
+        array = False
         if(peek == '['):
+            array = True
             f.advance() #'[' array open bracket
             peek = f.peek()
             if(peek !=']'):
                 self.CompileExpression()
             f.advance()#']' array close bracket
+            print('push local 0')
+            print('add')
+            
             
         
         f.advance()# '=' 
@@ -418,7 +427,13 @@ class CompileJack:
         var_symbol_num = self.symbol.indexOf(varName)
         kind = self.symbol.kindOf(varName)
         
-        VMWriter.pop(kind,var_symbol_num)
+        if array:
+            print('pop temp 0')
+            print('pop pointer 1')
+            print('push temp 0')
+            print('pop that 0')
+        else:
+            VMWriter.pop(kind,var_symbol_num)
         self.indent -=1
         
     def CompileWhile(self):
@@ -562,7 +577,7 @@ class CompileJack:
             VMWriter.push('constant',token)
             
         elif type == 'stringConstant':
-            self.out(token)
+            VMWriter.writeString(token)
         elif type =='keyword':
             VMWriter.writeKeyword(token)
             
@@ -590,11 +605,19 @@ class CompileJack:
                 
             #varName [ expression ]
             elif peek == '[':
-                token = f.advance()
-                self.out(token) #[
+                varName = token
+                kind = self.symbol.kindOf(varName)
+                
+                f.advance()#[
                 self.CompileExpression()
-                token = f.advance()
-                self.out(token)# ]
+                f.advance()# ]
+                
+                var_symbol_num = self.symbol.indexOf(varName)
+                VMWriter.push(kind, var_symbol_num)
+                print('add')
+                print('pop pointer 1')
+                print('push that 0')
+                
             
             
             
@@ -805,6 +828,16 @@ class VMWriter:
             print('push pointer 0')
         else:
             print(keyword)
+            
+    @staticmethod
+    def writeString(string):
+        string = string[1:-1]
+        length = len(string)
+        print('push constant '+str(length))
+        print('call String.new 1')
+        for i in string:
+            print('push constant '+str(ord(i)))
+            print('call String.appendChar 2')
     
     
     
