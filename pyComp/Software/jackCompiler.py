@@ -255,7 +255,9 @@ class CompileJack:
             num_of_vars+=1
             
         f.advance()#';'
-        return num_of_vars
+        if f_or_s != 'static':
+            return num_of_vars
+        return 0
         
     def CompileSubroutine(self,classVariables = 0):
         self.indent +=1
@@ -266,7 +268,10 @@ class CompileJack:
         self.symbol.startSubroutine()
         sub_type = f.advance() #constructor/function/method
         
-        
+        if sub_type == 'method':
+            #first arg pushed is 'this'
+            
+            self.symbol.define('this','object','arg')
         
         
         return_type = f.advance() #return type or void
@@ -300,10 +305,8 @@ class CompileJack:
             print('call Memory.alloc 1')
             print('pop pointer 0')
         if sub_type == 'method':
-            if(classVariables==0):
-                print('push argument '+str(1))
-            else:
-                print('push argument '+str(0))
+            
+            print('push argument '+str(0))
             print('pop pointer 0')
         
         self.CompileSubroutineBody()
@@ -415,7 +418,10 @@ class CompileJack:
             if(peek !=']'):
                 self.CompileExpression()
             f.advance()#']' array close bracket
-            print('push local 0')
+            
+            array_var_number = str(self.symbol.indexOf(varName))
+            kind = self.symbol.kindOf(varName)
+            VMWriter.push(kind,array_var_number)
             print('add')
             
             
@@ -652,7 +658,7 @@ class CompileJack:
         
         f = self.fetch
         token = f.advance() #could be a '.' or (
-        
+        num_subroutine_arguments = 0
         if className != '':
             subroutine_name = className+'.'
         else:
@@ -663,19 +669,11 @@ class CompileJack:
             token = f.advance()
             if(token!='('):
                 subroutine_name += token
-        
-        num_subroutine_arguments = self.CompileExpressionList()
-        token = f.advance() #')' end of subroutine call's arguments
-        
-        
-        
-
-        #self.symbol.printTables()
-        
+                
         #if we are calling a method in another object, push the first arg to be
         #a reference to the base of that object. write a call to the class's subroutine
         #if we are calling a method in this object, push our pointer to this object, then
-        #write a call to the class method
+        #write a call to the class method        
         if self.symbol.getTableOf(className) != None:
             index = self.symbol.indexOf(className)
             kind = self.symbol.kindOf(className)
@@ -689,6 +687,17 @@ class CompileJack:
             subroutine_name = self.class_name+'.'+subroutine_name
             print('push pointer 0')
             num_subroutine_arguments+=1
+        
+        num_subroutine_arguments += self.CompileExpressionList()
+        token = f.advance() #')' end of subroutine call's arguments
+        
+        
+        
+
+        #self.symbol.printTables()
+        
+
+        
             
         
         VMWriter.writeCall(subroutine_name, num_subroutine_arguments)

@@ -212,7 +212,8 @@ prefixes = ['pyComp/Test_Suite/testFiles/compilerFiles/Seven/',
             'pyComp/Test_Suite/testFiles/compilerFiles/Pong/',
             'pyComp/Test_Suite/testFiles/compilerFiles/Pong/',
             'pyComp/Test_Suite/testFiles/compilerFiles/Pong/',
-            'pyComp/Test_Suite/testFiles/compilerFiles/Pong/']
+            'pyComp/Test_Suite/testFiles/compilerFiles/Pong/',
+            'pyComp/Test_Suite/testFiles/compilerFiles/ComplexArrays/']
 fileNames = ['Main.jack',
              'Main.jack',
              'Main.jack',
@@ -222,7 +223,8 @@ fileNames = ['Main.jack',
              'Main.jack',
              'Ball.jack',
              'Bat.jack',
-             'PongGame.jack']
+             'PongGame.jack',
+             'Main.jack']
 
 for prefix,fileName in zip(prefixes,fileNames):
     fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
@@ -237,8 +239,8 @@ for prefix,fileName in zip(prefixes,fileNames):
 
 
 
-prefix = prefixes[-2]
-fileName= fileNames[-2]
+prefix = prefixes[-1]
+fileName= fileNames[-1]
 fn = os.path.join(os.path.dirname(__file__), prefix+fileName)
 CompileJack(fn)
 
