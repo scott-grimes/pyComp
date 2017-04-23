@@ -16,7 +16,7 @@ class Math {
     	while(i>1){
     	let i = i-1;
     	let twoToThe[i] = b;
-    	let b = b*2;
+    	let b = b*2; 
     	}
     	
     	
