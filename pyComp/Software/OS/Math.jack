@@ -13,7 +13,7 @@ class Math {
     	let twoToThe = Array.new(16);
     	let twoToThe[15] = 1;
     	
-    	while(i>1){
+    	while(i>0){
     	let i = i-1;
     	let twoToThe[i] = b;
     	let b = b+b; 
@@ -36,7 +36,7 @@ class Math {
     let shiftedX=x;
     let j = 0;
     while(j<y){
-    	if (bit(x,j)){
+    	if (Math.bit(x,j)){
     		let sum = sum+shiftedX;
     	}
     	let shiftedX = shiftedX+shiftedX;
@@ -47,23 +47,40 @@ return sum;
 
     /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
-    var boolean xNeg, yNeg;
-    if(x<0){	let xNeg = true;
-    			let x = -x;}
-    else{ 		let xNeg = false;}
+    //var boolean xNeg, yNeg;
+    var int q;
     
-    if(y<0){	let yNeg = true;
-    			let y = -y;}
-    else{		let yNeg = false;}
+    if(y>x){
+    	return 0;
+    }
+	let q = Math.divide(x,2*y);    
+    if((x-(2*q*y))<y)
+    {
+    return 2*q;
+    }
     
-    
-    return 0;
+    return (2*q)+1;
     
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+    var int y, j, n;
     return 0;
+    
+    
+   
+    }
+    
+    /** Returns x^y */
+    function int pow(int x, int y){
+    
+	if(y=0){
+		return 1;
+		}
+	return x*Math.pow(x,y-1);
+    
+    
     }
 
     /** Returns the greater number. */
