@@ -1,0 +1,87 @@
+/**
+ * A Math Library
+ */
+class Math {
+
+	//array where twoToThe[j] is equal to 2^j
+	field Array twoToThe;
+
+    function void init() {
+    	var int i,b;
+    	let i = 15;
+    	let b = 2;
+    	let twoToThe = Array.new(16);
+    	let twoToThe[15] = 1;
+    	
+    	while(i>1){
+    	let i = i-1;
+    	let twoToThe[i] = b;
+    	let b = b*2;
+    	}
+    	
+    	
+    }
+
+    function int abs(int x) {
+    if(x<0){
+    	return -x;
+    }
+    	return x;
+    }
+
+    /** Returns the product of x and y. */
+    function int multiply(int x, int y) {
+    var int sum, shiftedX, j;
+    let shiftedX=x;
+    let j = 0;
+    while(j<y){
+    	if bit(x,j){
+    		let sum = sum+shiftedX;
+    	}
+    	let shiftedX = shiftedX+shiftedX;
+    	let j = j+1;
+    }
+
+    /** Returns the integer part of x/y. */
+    function int divide(int x, int y) {
+    var boolean xNeg, yNeg;
+    if(x<0){	xNeg = true;
+    			x = -x;}
+    else{ 		xNeg = false;}
+    
+    if(y<0){	yNeg = true;
+    			y = -y;}
+    else{		yNeg = false;}
+    
+    
+    
+    
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+    if(a>b){
+    return a;
+    }
+    return b;
+    
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+    if(a<b){
+    return a;
+    }
+    return b;
+    }
+    
+    /** Returns true if the j-th bit of the integer x is 1*/
+	function boolean bit(int x, int j){
+		
+	}
+
+}
