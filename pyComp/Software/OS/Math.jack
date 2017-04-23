@@ -4,7 +4,7 @@
 class Math {
 
 	//array where twoToThe[j] is equal to 2^j
-	field Array twoToThe;
+	static Array twoToThe;
 
     function void init() {
     	var int i,b;
@@ -16,10 +16,10 @@ class Math {
     	while(i>1){
     	let i = i-1;
     	let twoToThe[i] = b;
-    	let b = b*2; 
+    	let b = b+b; 
     	}
     	
-    	
+    	return;
     }
 
     function int abs(int x) {
@@ -32,34 +32,38 @@ class Math {
     /** Returns the product of x and y. */
     function int multiply(int x, int y) {
     var int sum, shiftedX, j;
+    let sum = 0;
     let shiftedX=x;
     let j = 0;
     while(j<y){
-    	if bit(x,j){
+    	if (bit(x,j)){
     		let sum = sum+shiftedX;
     	}
     	let shiftedX = shiftedX+shiftedX;
     	let j = j+1;
     }
+return sum;
+}
 
     /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
     var boolean xNeg, yNeg;
-    if(x<0){	xNeg = true;
-    			x = -x;}
-    else{ 		xNeg = false;}
+    if(x<0){	let xNeg = true;
+    			let x = -x;}
+    else{ 		let xNeg = false;}
     
-    if(y<0){	yNeg = true;
-    			y = -y;}
-    else{		yNeg = false;}
+    if(y<0){	let yNeg = true;
+    			let y = -y;}
+    else{		let yNeg = false;}
     
     
-    
+    return 0;
     
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+    return 0;
     }
 
     /** Returns the greater number. */
@@ -81,7 +85,7 @@ class Math {
     
     /** Returns true if the j-th bit of the integer x is 1*/
 	function boolean bit(int x, int j){
-		
+		return x & twoToThe[j];
 	}
 
 }
