@@ -7,16 +7,13 @@ class Math {
 	static Array twoToThe;
 
     function void init() {
-    	var int i,b;
-    	let i = 15;
-    	let b = 2;
-    	let twoToThe = Array.new(16);
-    	let twoToThe[15] = 1;
-    	
-    	while(i>0){
-    	let i = i-1;
-    	let twoToThe[i] = b;
-    	let b = b+b; 
+    	var int i;
+    	let i = 0;
+    	let twoToThe = Array.new(16);  
+    	    	
+    	while(i<16){
+    	let twoToThe[i] = Math.pow(2,i);
+        let i = i+1;
     	}
     	
     	return;
@@ -35,8 +32,8 @@ class Math {
     let sum = 0;
     let shiftedX=x;
     let j = 0;
-    while(j<y){
-    	if (Math.bit(x,j)){
+    while(j<16){
+    	if (Math.bit(y,j)){
     		let sum = sum+shiftedX;
     	}
     	let shiftedX = shiftedX+shiftedX;
@@ -89,7 +86,6 @@ return sum;
     return a;
     }
     return b;
-    
     }
 
     /** Returns the smaller number. */
@@ -102,7 +98,7 @@ return sum;
     
     /** Returns true if the j-th bit of the integer x is 1*/
 	function boolean bit(int x, int j){
-		return x & twoToThe[j];
+		return ~((x & twoToThe[j]) = 0);
 	}
 
 }

@@ -5,7 +5,7 @@
 
 /**
  * Handles writing characters to the screen.
- * The text screen (256 columns and 512 roes) is divided into 23 text rows (0..22), 
+ * The text screen (256 columns and 512 rows) is divided into 23 text rows (0..22), 
  * each containing 64 text columns (0..63).
  * Each row is 11 pixels high (including 1 space pixel), and 8 pixels wide
  * (including 2 space pixels).
@@ -29,7 +29,7 @@ class Output {
         do Output.create(0,63,63,63,63,63,63,63,63,63,0,0);
 
         // Assigns the bitmap for each character in the charachter set.
-        do Output.create(32,0,0,0,0,0,0,0,0,0,0,0);          //
+        do Output.create(32,0,0,0,0,0,0,0,0,0,0,0);          // blank space
         do Output.create(33,12,30,30,30,12,12,0,12,12,0,0);  // !
         do Output.create(34,54,54,20,0,0,0,0,0,0,0,0);       // "
         do Output.create(35,0,18,18,63,18,18,63,18,18,0,0);  // #
@@ -168,7 +168,7 @@ class Output {
         return charMaps[c];
     }
 
-    /** Moves the cursor to the j’th column of the i’th row,
+    /** Moves the cursor to the jï¿½th column of the iï¿½th row,
      *  and erases the character that was there. */
     function void moveCursor(int i, int j) {
     }
