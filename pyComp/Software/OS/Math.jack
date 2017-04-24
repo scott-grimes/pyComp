@@ -44,8 +44,19 @@ return sum;
 
     /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
-    //var boolean xNeg, yNeg;
     var int q;
+    //if x or y is 0
+    if((x=0) | (y=0)){
+    return 0;
+    }
+    
+    //if x or y is neg
+    if(x<0){
+    return -Math.divide(-x,y);
+    }
+    if(y<0){
+    return -Math.divide(x,-y);
+    }
     
     if(y>x){
     	return 0;
@@ -59,11 +70,32 @@ return sum;
     return (2*q)+1;
     
     }
+    
+    /** Returns the remainder part of x/y */
+    function int mod(int x, int y) {
+        var int q;
+        
+        let q = Math.divide(x, y);
+        return x - (q*y);
+    }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-    var int y, j, n;
-    return 0;
+    //max bits is 16
+    //max j = 16/2-1
+    var int y, j,n;
+    let y = 0;
+    let j = 7;
+    
+    while(j>-1){
+    let n = y+Math.pow(2,j);
+    if(~(Math.pow(n,2)>x) &
+        Math.pow(n,2)>0){
+        let y = n;
+    }
+    let j = j-1;
+    }
+    return y;
     
     
    
