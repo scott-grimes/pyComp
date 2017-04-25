@@ -61,6 +61,9 @@ return sum;
     if(y>x){
     	return 0;
     }
+    if(2*y<0){
+    return y;
+    }
 	let q = Math.divide(x,2*y);    
     if((x-(2*q*y))<y)
     {
