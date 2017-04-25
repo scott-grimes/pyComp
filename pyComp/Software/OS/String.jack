@@ -99,7 +99,7 @@ class String {
     let mem_size = 7;
     let string_size = 0;
     
-    if(number<0 & ~(num=0)){
+    if(number<0 & ~(number=0)){
     do appendChar(45);
     let number = -number;
     let string_size = string_size+1;
@@ -115,11 +115,10 @@ class String {
     if(number>9){
     do recursiveSetInt(number/10);
     do appendChar(String.toChar(Math.mod(number,10)));
-    let string_size = string_size+1;
+    
     }
     else{
     do appendChar(String.toChar(number));
-    let string_size = string_size+1;
     }
     return;
     
