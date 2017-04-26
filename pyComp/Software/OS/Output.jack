@@ -18,8 +18,10 @@ class Output {
 
     /** Initializes the screen and locates the cursor at the screen's top-left. */
     function void init() {
+    do Output.initMap();
     let c_row = 0;
     let c_col = 0;
+    return;
     }
 
     // Initalizes the character map array
@@ -177,17 +179,44 @@ class Output {
     let c_row = i;
     let c_col = j;
     do Output.printChar(32);
-    
+    //let cursorRow = i;
+    //let cursorCol = j;
+    return;
     }
 
     /** Prints c at the cursor location and advances the cursor one
      *  column forward. */
     function void printChar(char c) {
-    do Output.printChar(c);
-    let c_col = c_col+1;
-    if(c_col>63){
-    do Output.println();
+    var int xPixel,yPixel;
+    var Array map;
+    var int rowCount;
+    var int i;
+    var int row;
+    
+    let map = Output.getMap(c);
+    
+    let yPixel = c_row*11;
+    let rowCount = 0;
+    
+    while(rowCount<11){
+        let xPixel = c_col*8;
+        let row = map[rowCount];
+        let i = 0;
+        while(i<8){
+        do Screen.setColor(Math.bit(row,i));
+        do Screen.drawPixel(xPixel,yPixel);
+        let i = i+1;
+        let xPixel = xPixel+1;
+        }
+        
+        let rowCount = rowCount + 1;
+        let yPixel = yPixel+1;
+    
     }
+    
+    
+    do Output.advanceCursor();
+    return;
     }
 
     /** Prints s starting at the cursor location, and advances the
@@ -200,6 +229,7 @@ class Output {
     do Output.printChar(s[i]);
     let i = i+1;
     }
+    return;
     }
 
     /** Prints i starting at the cursor location, and advances the
@@ -208,12 +238,14 @@ class Output {
     var String s;
     let s = String.setInt(i);
     do Output.printString(s);
+    return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
     let c_row = c_row+1;
     let c_col = 0;
+    return;
     }
 
     /** Moves the cursor one column back. */
@@ -226,5 +258,15 @@ class Output {
     let c_row = 0;
     }
     }
+    return;
+    }
+    
+    /** Advances the cursor. */
+    function void advanceCursor(){
+    let c_col = c_col+1;
+    if(c_col>63){
+    do Output.println();
+    }
+    return;    
     }
 }
