@@ -102,7 +102,7 @@ class String {
     if(number<0){
     do appendChar(45);
     let number = -number;
-    let string_size = string_size+1;
+    
     }
     
     do recursiveSetInt(number);

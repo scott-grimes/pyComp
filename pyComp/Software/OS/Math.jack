@@ -5,6 +5,7 @@ class Math {
 
 	//array where twoToThe[j] is equal to 2^j
 	static Array twoToThe;
+	static int qy;
  
     function void init() {
     	var int i;
@@ -44,34 +45,40 @@ return sum;
 
     /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
-    var int q;
-    //if x or y is 0
-    if((x=0) | (y=0)){
-    return 0;
-    }
-    
-    //if x or y is neg
-    if(x<0){
-    return -Math.divide(-x,y);
-    }
-    if(y<0){
-    return -Math.divide(x,-y);
-    }
-    
-    if(y>x){
-    	return 0;
-    }
-    if(2*y<0){
-    return y;
-    }
-	let q = Math.divide(x,2*y);    
-    if((x-(2*q*y))<y)
-    {
-    return 2*q;
-    }
-    
-    return (2*q)+1;
-    
+	var int q;
+	var boolean neg;
+	if(~((x<0)=(y<0))){
+	let neg = true;
+	}
+	else{ let neg = false; }
+		let x=Math.abs(x);
+		let y=Math.abs(y);
+	
+	if(y>x){
+		let qy=0;
+		return 0;
+	}
+	if((y+y)<0){
+		let qy=y;
+		if(neg){
+			return -1;
+		}
+		return 1;
+	}
+	let q=Math.divide(x,y+y);
+	if((x-qy)<y){
+		if(neg){
+			return -(q+q);
+		}
+		return (q+q);
+	}
+	else{
+		let qy=qy+y;
+		if(neg){
+			return -(q+q+1);
+		}
+		return (q+q+1);
+	}
     }
     
     /** Returns the remainder part of x/y */
