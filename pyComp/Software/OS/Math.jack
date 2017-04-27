@@ -47,6 +47,13 @@ return sum;
     function int divide(int x, int y) {
 	var int q;
 	var boolean neg;
+	
+	//Division by zero
+	if(y=0){
+	do Sys.error(3);
+	}
+	
+	
 	if(~((x<0)=(y<0))){
 	let neg = true;
 	}
@@ -96,6 +103,11 @@ return sum;
     var int y, j,n;
     let y = 0;
     let j = 7;
+    
+    //Cannot compute square root of a negative number
+    if(x<0){
+    do Sys.exit(4);
+    }
     
     while(j>-1){
     let n = y+Math.pow(2,j);

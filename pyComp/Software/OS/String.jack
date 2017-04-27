@@ -13,7 +13,14 @@ class String {
 
     /** Constructs a new empty String with a maximum length of maxLength. */
     constructor String new(int maxLength) {
-    if(maxLength<1){
+    
+    //Maximum length must be non-negative
+    if(maxLength<0){
+    do Sys.error(14);
+    }
+    
+    //maxLength of 0 is supported
+    if(maxLenth = 0){
     let maxLength = 1;
     }
     
@@ -37,11 +44,23 @@ class String {
 
     /** Returns the character at location j. */
     method char charAt(int j) {
+    
+    //String index out of bounds
+    if((j<0)|(j>(string_size-1))){
+    do Sys.error(15);
+    }
+    
     return s[j];
     }
 
     /** Sets the j'th character of this string to be c. */
     method void setCharAt(int j, char c) {
+    
+    //String index out of bounds
+    if((j<0)|(j>(string_size-1))){
+    do Sys.error(16);
+    }
+    
     let s[j] = c;
     return;
     }
@@ -49,6 +68,12 @@ class String {
     /** Appends the character c to the end of this String.
      *  Returns this string as the return value. */
     method String appendChar(char c) {
+    
+    //String is full
+    if(string_size=mem_size){
+    do Sys.error(17);
+    }
+    
     let s[string_size] = c;
     let string_size = string_size+1;
     return this;
@@ -56,6 +81,12 @@ class String {
 
     /** Erases the last character from this String. */
     method void eraseLastChar() {
+    
+    //String is empty
+    if(string_size<1){
+    do Sys.error(18);
+    }
+    
     let string_size = string_size-1;
     return;
     }

@@ -10,6 +10,12 @@ class Array {
 
     /** Constructs a new Array of the given size. */
     function Array new(int size) {
+    
+    //Array size must be positive
+    if(size<0){
+    do Sys.error(1);
+    }
+    
     return Memory.alloc(size);
     }
 
