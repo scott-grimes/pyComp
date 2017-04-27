@@ -15,12 +15,26 @@ class Output {
     // Character map for printing on the left of a screen word
     static Array charMaps; 
     static int c_row,c_col;
+    static Array twoToThe;
 
     /** Initializes the screen and locates the cursor at the screen's top-left. */
     function void init() {
+    var int i;
+    var int b;
+    let i = 0;
+    let b = 1;
+    
     do Output.initMap();
     let c_row = 0;
     let c_col = 0;
+    
+    let twoToThe = Array.new(16);
+    while(i<16){
+    let twoToThe[i] = b;
+    let i = i+1;
+    let b = b+b;
+    }
+    
     return;
     }
 
@@ -70,7 +84,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,48,120,204,252,204,204,204,204,204,0,0);// A
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -179,8 +193,8 @@ class Output {
     let c_row = i;
     let c_col = j;
     do Output.printChar(32);
-    //let cursorRow = i;
-    //let cursorCol = j;
+    let c_row = i;
+    let c_col = j;
     return;
     }
 
@@ -203,7 +217,7 @@ class Output {
         let row = map[rowCount];
         let i = 0;
         while(i<8){
-        do Screen.setColor(Math.bit(row,i));
+        do Screen.setColor(Output.bit(row,i));
         do Screen.drawPixel(xPixel,yPixel);
         let i = i+1;
         let xPixel = xPixel+1;
@@ -214,19 +228,17 @@ class Output {
     
     }
     
-    
-    do Output.advanceCursor();
+    do Output.advanceCursor(1);
     return;
     }
 
     /** Prints s starting at the cursor location, and advances the
      *  cursor appropriately. */
     function void printString(String s) {
-    var int i, len;
-    let len = s.length();
+    var int i;
     let i = 0;
-    while(i<len){
-    do Output.printChar(s[i]);
+    while(i<s.length()){
+    do Output.printChar(s.charAt(i));
     let i = i+1;
     }
     return;
@@ -236,7 +248,8 @@ class Output {
      *  cursor appropriately. */
     function void printInt(int i) {
     var String s;
-    let s = String.setInt(i);
+    let s = String.new(16);
+    do s.setInt(i);
     do Output.printString(s);
     return;
     }
@@ -244,29 +257,36 @@ class Output {
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
     let c_row = c_row+1;
+    if(c_row>22){
+    let c_row = 0;
+    }
     let c_col = 0;
+    
     return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
-    let c_col = c_col-1;
-    if(c_col<0){
-    let c_col = 63;
-    let c_row = c_row-1;
-    if(c_row<0){
-    let c_row = 0;
-    }
-    }
+    do Output.advanceCursor(-1);
+    do Output.moveCursor(c_row,c_col);
     return;
     }
     
-    /** Advances the cursor. */
-    function void advanceCursor(){
-    let c_col = c_col+1;
+    /** Advances the cursor 'x' spaces. */
+    function void advanceCursor(int x){
+    let c_col = c_col+x;
+    if(c_col<0){
+    let c_col = 0;
+    }
     if(c_col>63){
     do Output.println();
     }
     return;    
+    }
+    
+    /**Used to find individual pixels in our charmap*/
+    function boolean bit(int x, int y){
+    
+    return ~((x & twoToThe[y]) = 0);
     }
 }
