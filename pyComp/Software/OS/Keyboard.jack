@@ -1,8 +1,4 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/12/Keyboard.jack
-
+//needs fixing!
 /**
  * A library for handling user input from the keyboard.
  */

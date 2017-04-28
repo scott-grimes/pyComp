@@ -60,89 +60,45 @@ class Memory {
     /** finds and allocates from the heap a memory block of the 
      *  specified size and returns a reference to its base address. */
     function int alloc(int size) {
-    var Array curr, last;
+    var Array currB, lastB ,nextB;
+    let currB = freeList;
+    let lastB = null;
     
-    let last = Memory.find_block(size);
-    
-    //was no block found? 
-    if(last = NONE_FOUND){
+    while(currB[SIZE]<size){
+    let lastB = currB;
+    let currB = currB[NEXT];
+    if(currB = null){
         return null;
     }
+    }
     
-    //was the last block freeList?
-    if(last = null){
-        //new block is created at the start of freelist
-        let curr = freeList;
-        
-        //freeList now starts a new block
-        let freeList = Memory.create_allocation(curr,size);
-        
+    let nextB = currB+2+size;
+    let nextB[SIZE] = currB[SIZE]-size-2;
+    let nextB[NEXT] = currB[NEXT];
+    let currB[SIZE] = size;
+    let currB[NEXT] = null;
+    
+    if(lastB = 0){
+        let freeList = nextB;
     }
     else{
+    let lastB[NEXT] = nextB;
+    }
     
-        let curr = last[NEXT];
-        let last[NEXT] = Memory.create_allocation(curr,size);
-     }   
-    return curr+1; //+1?
+    return currB+2;
     
     }
     
-    //returns the block just before a block of appropriate size is found
-    function Array find_block(int size){
-    var Array curr, last, best;
-    var int current_size;
-    var int best_size;
-    
-    let curr = freeList;
-    let last = null;
-    let best = NONE_FOUND; //default until a good block is found
-    let best_size = 16384-2048-1;
-    
-    //search to find the best fitting block
-    while(~(curr=null)){
-        let current_size = curr[SIZE]-1; //number of spaces availible
-        if(~(current_size<size) & (current_size<best_size)){
-            //new best best found!
-            let best = last; //store the block before the best fitting
-            let best_size = current_size;
-        }
-        let last = curr;
-        let curr = curr[NEXT];
-    }
-    
-    return best;
-    
-    }
-    
+   
 
     
     /** De-allocates the given object and frees its space. */
     function void deAlloc(int object) {
+    var Array curr;
+    let curr = object-2;
+    let curr[NEXT] = freeList;
+    let freeList = curr;
+    
     return;
     }    
-    
-    
-    /**creates the block and adjusts the free and allocated blocks headers*/
-    function Array create_allocation(Array old_block, int size){
-    var Array new_block;
-    var int pre_allocation_size;
-    
-    //can the block hold the free header, allocated header, allocated block, and more?
-    if(old_block[SIZE] > (size+1+2)){
-    let new_block = old_block+size+1; //make room for the allocated header
-    let new_block[NEXT] = old_block[NEXT];
-    let new_block[SIZE] = old_block[SIZE]-(new_block-old_block);
-    let old_block = old_block+1; //the base of our old_block gets returned
-    let old_block[-1] = size+1; //one point below the base of our block is the allocated header (size)
     }
-    else{
-    //we have to allocate the entire block
-    let new_block = old_block[NEXT];
-    let pre_allocation_size = old_block[SIZE];
-    let old_block = old_block+1;
-    let old_block[-1] = pre_allocation_size;
-    }
-    
-    return new_block;
-    }
-}

@@ -20,7 +20,7 @@ class String {
     }
     
     //maxLength of 0 is supported
-    if(maxLenth = 0){
+    if(maxLength = 0){
     let maxLength = 1;
     }
     
@@ -143,10 +143,11 @@ class String {
     
     /**recursive helper to convert a given int into a string*/
     method void recursiveSetInt(int number){
-    
+    var int mod;
     if(number>9){
     do recursiveSetInt(number/10);
-    do appendChar(String.toChar(Math.mod(number,10)));
+    let mod = number - ((number/10)*10);
+    do appendChar(String.toChar(mod));
     
     }
     else{

@@ -1,0 +1,148 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+
+
+// https://github.com/jtdowney/nand2tetris/blob/master/12/Memory.jack
+//simpler
+
+
+
+
+
+
+/**
+ * Memory operations library.
+ */ 
+class Memory {
+    static Array m;
+    static Array freeList;
+    static int SIZE,NEXT,NONE_FOUND;
+    
+    //Each free block has the following orginization
+    //b[0] = size of this block including this int and one header cell
+    //b[1] = header cell with the address of the next block
+    //b[2...] = data from [0..size-2] inclusive
+    
+    //every returned block has the following orginization
+    //b[0] = size of this block including this int
+    //b[1...] = data from [0..size-1]
+    
+
+    /** Initializes memory parameters. */
+    function void init() {
+    let m = 0;
+    let SIZE = 0;
+    let NEXT = 1;
+    let NONE_FOUND = -666;
+    
+    let freeList = 2048;  //start of the heap
+    let freeList[SIZE] = 16383-2048-1; //size of this block
+    let freeList[NEXT] = null; //next address (null if no more free blocks exist)
+    
+    return;
+    }
+
+    /** Returns the value of the main memory at the given address. */
+    function int peek(int address) {
+    return m[address];
+    }
+
+    /** Sets the value of the main memory at this address
+     *  to the given value. */
+    function void poke(int address, int value) {
+    let m[address] = value;
+    return;
+    }
+
+    /** finds and allocates from the heap a memory block of the 
+     *  specified size and returns a reference to its base address. */
+    function int alloc(int size) {
+    var Array curr, last;
+    
+    let last = Memory.find_block(size);
+    
+    //was no block found? 
+    if(last = NONE_FOUND){
+        return null;
+    }
+    
+    //was the last block freeList?
+    if(last = null){
+        //new block is created at the start of freelist
+        let curr = freeList;
+        
+        //freeList now starts a new block
+        let freeList = Memory.create_allocation(curr,size);
+        
+    }
+    else{
+    
+        let curr = last[NEXT];
+        let last[NEXT] = Memory.create_allocation(curr,size);
+     }   
+    return curr+1; //+1?
+    
+    }
+    
+    //returns the block just before a block of appropriate size is found
+    function Array find_block(int size){
+    var Array curr, last, best;
+    var int current_size;
+    var int best_size;
+    
+    let curr = freeList;
+    let last = null;
+    let best = NONE_FOUND; //default until a good block is found
+    let best_size = 16384-2048-1;
+    
+    //search to find the best fitting block
+    while(~(curr=null)){
+        let current_size = curr[SIZE]-1; //number of spaces availible
+        if(~(current_size<size) & (current_size<best_size)){
+            //new best best found!
+            let best = last; //store the block before the best fitting
+            let best_size = current_size;
+        }
+        let last = curr;
+        let curr = curr[NEXT];
+    }
+    
+    return best;
+    
+    }
+    
+
+    
+    /** De-allocates the given object and frees its space. */
+    function void deAlloc(int object) {
+    return;
+    }    
+    
+    
+    /**creates the block and adjusts the free and allocated blocks headers*/
+    function Array create_allocation(Array old_block, int size){
+    var Array new_block;
+    var int pre_allocation_size;
+    
+    //can the block hold the free header, allocated header, allocated block, and more?
+    if(old_block[SIZE] > (size+1+2)){
+    let new_block = old_block+size+1; //make room for the allocated header
+    let new_block[NEXT] = old_block[NEXT];
+    let new_block[SIZE] = old_block[SIZE]-(new_block-old_block);
+    let old_block = old_block+1; //the base of our old_block gets returned
+    let old_block[-1] = size+1; //one point below the base of our block is the allocated header (size)
+    }
+    else{
+    //we have to allocate the entire block
+    let new_block = old_block[NEXT];
+    let pre_allocation_size = old_block[SIZE];
+    let old_block = old_block+1;
+    let old_block[-1] = pre_allocation_size;
+    }
+    
+    return new_block;
+    }
+}
