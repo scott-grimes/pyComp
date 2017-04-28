@@ -106,7 +106,7 @@ return sum;
     
     //Cannot compute square root of a negative number
     if(x<0){
-    do Sys.exit(4);
+    do Sys.error(4);
     }
     
     while(j>-1){
